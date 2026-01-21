@@ -12,23 +12,27 @@ Library.Windows = {}
 
 -- [ 1. CONFIGURATION & THEME ] --
 Library.Theme = {
-	Main        = Color3.fromRGB(20, 20, 25),
+	Main        = Color3.fromRGB(20, 20, 25),    -- Couleur du fond (Gris foncé)
 	Sidebar     = Color3.fromRGB(15, 15, 20),
 	Topbar      = Color3.fromRGB(18, 18, 22),
 	Section     = Color3.fromRGB(28, 28, 32),
-	Accent      = Color3.fromRGB(120, 90, 255),
+	Accent      = Color3.fromRGB(120, 90, 255),  -- Ça c'est le violet pour les textes/sliders activés
 	Text        = Color3.fromRGB(240, 240, 240),
 	TextDark    = Color3.fromRGB(140, 140, 150),
-	Outline     = Color3.fromRGB(20, 20, 25),
+	
+	-- [[ LE SECRET EST ICI ]] --
+	-- On met la couleur de l'Outline IDENTIQUE à celle du Main (20, 20, 25)
+	-- Résultat : La bordure devient invisible !
+	Outline     = Color3.fromRGB(20, 20, 25), 
+	
 	Hover       = Color3.fromRGB(35, 35, 40),
 	Dropdown    = Color3.fromRGB(25, 25, 30),
 	
-	-- [NOUVEAU] TOUTES LES TAILLES SONT CONFIGURABLES
 	Sizes = {
-		Tab = 36,        -- Hauteur des boutons Onglets (Sidebar)
-		Element = 32,    -- Hauteur des Boutons/Toggles
-		Slider = 45,     -- Hauteur des Sliders
-		SectionGap = 6   -- Espace entre les éléments
+		Tab = 36,
+		Element = 32,
+		Slider = 45,
+		SectionGap = 6
 	},
 	
 	TextSize = {
