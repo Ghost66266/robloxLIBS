@@ -106,20 +106,17 @@ function Library:Welcome(TitleText, SubText)
 	Tween(BackFrame, {BackgroundTransparency = 1}, 0.5); Tween(Blur, {Size = 0}, 0.8); task.wait(0.8); Screen:Destroy(); Blur:Destroy()
 end
 
--- [ FONCTION CREATEWINDOW REMISE À NEUF ] --
 function Library:CreateWindow(Config)
 	local WindowName = Config.Title or "WindUI"
 	local Size = Config.Size or UDim2.new(0, 650, 0, 400)
 	
-	-- Configuration des Textes
+	-- Configs
 	if Config.TextSize then
 		if Config.TextSize.Title then Library.Theme.TextSize.Title = Config.TextSize.Title end
 		if Config.TextSize.Tab then Library.Theme.TextSize.Tab = Config.TextSize.Tab end
 		if Config.TextSize.Section then Library.Theme.TextSize.Section = Config.TextSize.Section end
 		if Config.TextSize.Element then Library.Theme.TextSize.Element = Config.TextSize.Element end
 	end
-	
-	-- Configuration des Tailles
 	if Config.ElementSize then
 		if Config.ElementSize.Tab then Library.Theme.Sizes.Tab = Config.ElementSize.Tab end
 		if Config.ElementSize.Button then Library.Theme.Sizes.Element = Config.ElementSize.Button end
@@ -127,18 +124,21 @@ function Library:CreateWindow(Config)
 		if Config.ElementSize.Gap then Library.Theme.Sizes.SectionGap = Config.ElementSize.Gap end
 	end
 	
-	-- Nettoyage
 	for _, ui in pairs(CoreGui:GetChildren()) do if ui.Name == "WindUI_" .. WindowName then ui:Destroy() end end
 	local ScreenGui = Instance.new("ScreenGui"); ScreenGui.Name = "WindUI_" .. WindowName; ScreenGui.IgnoreGuiInset = true; ProtectGui(ScreenGui)
 
-	-- FENÊTRE PRINCIPALE
-	local Main = Instance.new("Frame", ScreenGui); Main.Name = "Main"; Main.Size = UDim2.new(0,0,0,0); Main.Position = UDim2.new(0.5,0,0.5,0); Main.AnchorPoint = Vector2.new(0.5,0.5); Main.BackgroundColor3 = Library.Theme.Main; Main.ClipsDescendants = true
+	-- [[ FENÊTRE PRINCIPALE (SANS BORDURE) ]] --
+	local Main = Instance.new("Frame", ScreenGui); 
+	Main.Name = "Main"; 
+	Main.Size = UDim2.new(0,0,0,0); 
+	Main.Position = UDim2.new(0.5,0,0.5,0); 
+	Main.AnchorPoint = Vector2.new(0.5,0.5); 
+	Main.BackgroundColor3 = Library.Theme.Main; 
+	Main.ClipsDescendants = true
+	Main.BorderSizePixel = 0 -- Important : Bordure Roblox à 0
 	
-	-- BORDURE STANDARD (Celle qui utilise ton Theme)
+	-- Juste l'arrondi, PAS de UIStroke ici
 	Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 6)
-	local MainStroke = Instance.new("UIStroke", Main)
-	MainStroke.Color = Library.Theme.Outline -- Utilise la couleur configurée en haut
-	MainStroke.Thickness = 1 -- Finesse standard
 	
 	Tween(Main, {Size = Size}, 0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
 
@@ -147,8 +147,7 @@ function Library:CreateWindow(Config)
 
 	local Title = Instance.new("TextLabel", Sidebar); Title.Size = UDim2.new(1, -20, 0, 50); Title.Position = UDim2.new(0, 20, 0, 10); Title.BackgroundTransparency = 1
 	Title.Text = "<b>" .. string.upper(WindowName) .. "</b>"; Title.RichText = true; Title.TextColor3 = Library.Theme.Text; Title.Font = Enum.Font.GothamMedium
-	Title.TextSize = Library.Theme.TextSize.Title
-	Title.TextXAlignment = Enum.TextXAlignment.Left
+	Title.TextSize = Library.Theme.TextSize.Title; Title.TextXAlignment = Enum.TextXAlignment.Left
 	
 	local TabContainer = Instance.new("ScrollingFrame", Sidebar); TabContainer.Size = UDim2.new(1,0,1,-70); TabContainer.Position = UDim2.new(0,0,0,70); TabContainer.BackgroundTransparency = 1; TabContainer.ScrollBarThickness = 0; local TabList = Instance.new("UIListLayout", TabContainer); TabList.Padding = UDim.new(0, 5)
 	
@@ -180,7 +179,12 @@ function Library:CreateWindow(Config)
 
 		local TabFuncs = {}
 		function TabFuncs:AddSection(Title)
-			local Section = Instance.new("Frame", Page); Section.BackgroundColor3 = Library.Theme.Section; Section.Size = UDim2.new(1,0,0,30); Instance.new("UICorner", Section).CornerRadius = UDim.new(0, 4); Instance.new("UIStroke", Section).Color = Library.Theme.Outline
+			local Section = Instance.new("Frame", Page); Section.BackgroundColor3 = Library.Theme.Section; Section.Size = UDim2.new(1,0,0,30); 
+			
+			-- [SECTION SANS BORDURE]
+			Instance.new("UICorner", Section).CornerRadius = UDim.new(0, 9)
+			-- J'ai supprimé le UIStroke ici aussi
+			
 			local SecTitle = Instance.new("TextLabel", Section); SecTitle.Size = UDim2.new(1,-20,0,30); SecTitle.Position = UDim2.new(0,10,0,0); SecTitle.BackgroundTransparency = 1
 			SecTitle.Text = Title; SecTitle.TextColor3 = Library.Theme.TextDark; SecTitle.Font = Enum.Font.GothamBold; SecTitle.TextSize = Library.Theme.TextSize.Section; SecTitle.TextXAlignment = Enum.TextXAlignment.Left
 			local Container = Instance.new("Frame", Section); Container.Size = UDim2.new(1,-20,0,0); Container.Position = UDim2.new(0,10,0,30); Container.BackgroundTransparency = 1
@@ -189,7 +193,12 @@ function Library:CreateWindow(Config)
 
 			local SecFuncs = {}
 			function SecFuncs:AddButton(Text, Callback)
-				local Btn = Instance.new("TextButton", Container); Btn.Size = UDim2.new(1,0,0, Library.Theme.Sizes.Element); Btn.BackgroundColor3 = Library.Theme.Main; Btn.Text = Text; Btn.TextColor3 = Library.Theme.Text; Btn.Font = Enum.Font.GothamBold; Btn.TextSize = Library.Theme.TextSize.Element; Btn.AutoButtonColor = false; Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 4); Instance.new("UIStroke", Btn).Color = Library.Theme.Outline
+				local Btn = Instance.new("TextButton", Container); Btn.Size = UDim2.new(1,0,0, Library.Theme.Sizes.Element); Btn.BackgroundColor3 = Library.Theme.Main; Btn.Text = Text; Btn.TextColor3 = Library.Theme.Text; Btn.Font = Enum.Font.GothamBold; Btn.TextSize = Library.Theme.TextSize.Element; Btn.AutoButtonColor = false; 
+				
+				-- [BOUTON SANS BORDURE]
+				Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 4)
+				-- Pas de UIStroke ici
+				
 				AddClickEffect(Btn); Btn.MouseEnter:Connect(function() Tween(Btn, {BackgroundColor3 = Library.Theme.Hover}) end); Btn.MouseLeave:Connect(function() Tween(Btn, {BackgroundColor3 = Library.Theme.Main}) end); Btn.MouseButton1Click:Connect(function() CreateRipple(Btn); pcall(Callback) end)
 			end
 			function SecFuncs:AddToggle(Text, Default, Callback)
@@ -210,7 +219,10 @@ function Library:CreateWindow(Config)
 			end
 			function SecFuncs:AddDropdown(Text, Items, Default, Callback)
 				local Drop = Instance.new("Frame", Container); Drop.Size = UDim2.new(1,0,0, Library.Theme.Sizes.Element); Drop.BackgroundTransparency = 1; Drop.ClipsDescendants = true
-				local Btn = Instance.new("TextButton", Drop); Btn.Size = UDim2.new(1,0,0, Library.Theme.Sizes.Element); Btn.BackgroundColor3 = Library.Theme.Main; Btn.Text = ""; Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 4); Instance.new("UIStroke", Btn).Color = Library.Theme.Outline; AddClickEffect(Btn)
+				local Btn = Instance.new("TextButton", Drop); Btn.Size = UDim2.new(1,0,0, Library.Theme.Sizes.Element); Btn.BackgroundColor3 = Library.Theme.Main; Btn.Text = ""; Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 4); 
+				-- [DROPDOWN SANS BORDURE]
+				-- Pas de UIStroke
+				AddClickEffect(Btn)
 				local Lab = Instance.new("TextLabel", Btn); Lab.Size = UDim2.new(1,-30,1,0); Lab.Position = UDim2.new(0,10,0,0); Lab.BackgroundTransparency = 1; Lab.Text = Text .. ": " .. (Default or "..."); Lab.TextColor3 = Library.Theme.Text; Lab.Font = Enum.Font.GothamMedium; Lab.TextSize = Library.Theme.TextSize.Element; Lab.TextXAlignment = Enum.TextXAlignment.Left
 				local Arrow = Instance.new("ImageLabel", Btn); Arrow.Size = UDim2.new(0,20,0,20); Arrow.Position = UDim2.new(1,-25,0.5,-10); Arrow.BackgroundTransparency = 1; Arrow.Image = "rbxassetid://6031091004"; Arrow.ImageColor3 = Library.Theme.TextDark
 				local List = Instance.new("ScrollingFrame", Drop); List.Size = UDim2.new(1,0,0,0); List.Position = UDim2.new(0,0,0,35); List.BackgroundColor3 = Library.Theme.Main; List.BorderSizePixel = 0; List.ScrollBarThickness = 2; local ListL = Instance.new("UIListLayout", List); ListL.Padding = UDim.new(0, 2)
@@ -218,7 +230,9 @@ function Library:CreateWindow(Config)
 				for _, item in pairs(Items) do local IB = Instance.new("TextButton", List); IB.Size = UDim2.new(1,0,0,25); IB.BackgroundColor3 = Library.Theme.Main; IB.Text = "  " .. item; IB.TextColor3 = Library.Theme.TextDark; IB.Font = Enum.Font.Gotham; IB.TextSize = Library.Theme.TextSize.Element; IB.TextXAlignment = Enum.TextXAlignment.Left; IB.MouseButton1Click:Connect(function() Open = false; Lab.Text = Text..": "..item; Tween(Drop, {Size = UDim2.new(1,0,0, Library.Theme.Sizes.Element)}); Tween(Arrow, {Rotation = 0}); pcall(Callback, item) end) end; List.CanvasSize = UDim2.new(0,0,0,#Items*27)
 			end
 			function SecFuncs:AddTextbox(Text, Callback)
-				local BoxFrame = Instance.new("Frame", Container); BoxFrame.Size = UDim2.new(1,0,0, Library.Theme.Sizes.Element); BoxFrame.BackgroundColor3 = Library.Theme.Main; Instance.new("UICorner", BoxFrame).CornerRadius = UDim.new(0, 4); Instance.new("UIStroke", BoxFrame).Color = Library.Theme.Outline
+				local BoxFrame = Instance.new("Frame", Container); BoxFrame.Size = UDim2.new(1,0,0, Library.Theme.Sizes.Element); BoxFrame.BackgroundColor3 = Library.Theme.Main; Instance.new("UICorner", BoxFrame).CornerRadius = UDim.new(0, 4); 
+				-- [INPUT SANS BORDURE]
+				-- Pas de UIStroke
 				local Input = Instance.new("TextBox", BoxFrame); Input.Size = UDim2.new(1,-10,1,0); Input.Position = UDim2.new(0,10,0,0); Input.BackgroundTransparency = 1; Input.Text = ""; Input.PlaceholderText = Text; Input.TextColor3 = Library.Theme.Text; Input.PlaceholderColor3 = Library.Theme.TextDark; Input.Font = Enum.Font.GothamMedium; Input.TextSize = Library.Theme.TextSize.Element; Input.TextXAlignment = Enum.TextXAlignment.Left; Input.FocusLost:Connect(function() pcall(Callback, Input.Text) end)
 			end
 			return SecFuncs
@@ -226,7 +240,7 @@ function Library:CreateWindow(Config)
 		return TabFuncs
 	end
 
-	-- [ PROFILE CARD ] --
+	-- [ PROFILE CARD SANS BORDURE ] --
 	function WindowFuncs:AddProfile()
 		local Player = Players.LocalPlayer
 		TabContainer.Size = UDim2.new(1, 0, 1, -80)
@@ -239,7 +253,8 @@ function Library:CreateWindow(Config)
 		ProfileFrame.BorderSizePixel = 0
 		ProfileFrame.ZIndex = 20
 		Instance.new("UICorner", ProfileFrame).CornerRadius = UDim.new(0, 8)
-		Instance.new("UIStroke", ProfileFrame).Color = Library.Theme.Outline
+		
+		-- [SUPPRIMÉ] Plus de UIStroke ici
 
 		local Avatar = Instance.new("ImageLabel", ProfileFrame)
 		Avatar.Size = UDim2.new(0, 36, 0, 36)
