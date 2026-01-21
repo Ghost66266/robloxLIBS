@@ -115,7 +115,48 @@ function Library:CreateWindow(title)
 		end
 
 		local PageActions = {}
+-- À ajouter à l'intérieur de la fonction WindowActions:AddPage -> PageActions:AddSection
+function SecActions:AddToggle(text, default, callback)
+    local Tgl = Instance.new("TextButton", Sec)
+    Tgl.Size = UDim2.new(0.92, 0, 0, 38)
+    Tgl.BackgroundColor3 = Theme.Main
+    Tgl.Text = "  " .. text
+    Tgl.TextColor3 = Theme.Text
+    Tgl.Font = "GothamMedium"
+    Tgl.TextSize = 13
+    Tgl.TextXAlignment = "Left"
+    Tgl.AutoButtonColor = false
+    Tgl.ClipsDescendants = true
+    Instance.new("UICorner", Tgl)
+    
+    local TStroke = Instance.new("UIStroke", Tgl)
+    TStroke.Color = Theme.Outline
 
+    -- Indicateur visuel du Toggle (Cercle/Carré à droite)
+    local Indicator = Instance.new("Frame", Tgl)
+    Indicator.Size = UDim2.new(0, 40, 0, 20)
+    Indicator.Position = UDim2.new(1, -50, 0.5, -10)
+    Indicator.BackgroundColor3 = default and Theme.Accent or Color3.fromRGB(50, 50, 50)
+    Instance.new("UICorner", Indicator).CornerRadius = UDim.new(1, 0)
+    
+    local Dot = Instance.new("Frame", Indicator)
+    Dot.Size = UDim2.new(0, 16, 0, 16)
+    Dot.Position = default and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
+    Dot.BackgroundColor3 = Color3.new(1, 1, 1)
+    Instance.new("UICorner", Dot).CornerRadius = UDim.new(1, 0)
+
+    local state = default
+    Tgl.MouseButton1Click:Connect(function()
+        state = not state
+        CreateRipple(Tgl)
+        
+        -- Animation du Toggle
+        TS:Create(Indicator, TweenInfo.new(0.3), {BackgroundColor3 = state and Theme.Accent or Color3.fromRGB(50, 50, 50)}):Play()
+        TS:Create(Dot, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {Position = state and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)}):Play()
+        
+        callback(state)
+    end)
+end
 		function PageActions:AddSection(sTitle)
 			local Sec = Instance.new("Frame", Page)
 			Sec.Size = UDim2.new(0.98, 0, 0, 40); Sec.BackgroundColor3 = Theme.Section; Sec.AutomaticSize = "Y"
