@@ -16,8 +16,11 @@ local Theme = {
 	TextDark = Color3.fromRGB(140, 140, 140)
 }
 
--- [[ EFFET ONDE VIOLETTE ]] --
+-- [[ EFFET ONDE VIOLETTE SÉCURISÉ ]] --
 local function CreateRipple(obj)
+	-- On force le clipping pour que l'onde ne dépasse jamais
+	obj.ClipsDescendants = true 
+	
 	task.spawn(function()
 		local Mouse = Players.LocalPlayer:GetMouse()
 		local Circle = Instance.new("ImageLabel", obj)
@@ -29,7 +32,12 @@ local function CreateRipple(obj)
 		Circle.Position = UDim2.new(0, Mouse.X - obj.AbsolutePosition.X, 0, Mouse.Y - obj.AbsolutePosition.Y)
 		Circle.AnchorPoint = Vector2.new(0.5, 0.5)
 		Circle.Size = UDim2.new(0, 0, 0, 0)
-		TS:Create(Circle, TweenInfo.new(0.5, Enum.EasingStyle.Quart), {Size = UDim2.new(0, obj.AbsoluteSize.X * 2.5, 0, obj.AbsoluteSize.X * 2.5), ImageTransparency = 1}):Play()
+		
+		TS:Create(Circle, TweenInfo.new(0.5, Enum.EasingStyle.Quart), {
+			Size = UDim2.new(0, obj.AbsoluteSize.X * 2.5, 0, obj.AbsoluteSize.X * 2.5), 
+			ImageTransparency = 1
+		}):Play()
+		
 		Debris:AddItem(Circle, 0.6)
 	end)
 end
@@ -53,14 +61,12 @@ function Library:CreateWindow(title)
 	Main.Name = "MainFrame"; Main.Size = UDim2.new(0, 620, 0, 420); Main.Position = UDim2.new(0.5, -310, 0.5, -210)
 	Main.BackgroundColor3 = Theme.Main; Main.BorderSizePixel = 0
 	Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 15)
-	
-	local Stroke = Instance.new("UIStroke", Main)
-	Stroke.Color = Theme.Accent; Stroke.Thickness = 1.5; Stroke.Transparency = 0.3
+	Instance.new("UIStroke", Main).Color = Theme.Accent
 
-	-- SIDEBAR AVEC EFFET FLOU (TRANSLUCIDE)
+	-- SIDEBAR FROSTED
 	local Sidebar = Instance.new("Frame", Main)
 	Sidebar.Name = "Sidebar"; Sidebar.Size = UDim2.new(0, 160, 1, 0); Sidebar.BackgroundColor3 = Theme.Sidebar
-	Sidebar.BackgroundTransparency = 0.2 -- Effet translucide
+	Sidebar.BackgroundTransparency = 0.15 -- Translucide
 	Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 15)
 
 	local SidebarList = Instance.new("ScrollingFrame", Sidebar)
@@ -72,7 +78,7 @@ function Library:CreateWindow(title)
 	Title.Size = UDim2.new(1, 0, 0, 60); Title.Text = "8.8.8.8"; Title.TextColor3 = Theme.Accent
 	Title.Font = "GothamBold"; Title.TextSize = 22; Title.BackgroundTransparency = 1
 
-	-- CONTENEUR DE PAGES
+	-- PAGES
 	local PageContainer = Instance.new("Frame", Main)
 	PageContainer.Name = "Pages"; PageContainer.Size = UDim2.new(1, -180, 1, -30); PageContainer.Position = UDim2.new(0, 170, 0, 15)
 	PageContainer.BackgroundTransparency = 1
@@ -89,6 +95,7 @@ function Library:CreateWindow(title)
 		local TabBtn = Instance.new("TextButton", SidebarList)
 		TabBtn.Size = UDim2.new(0.85, 0, 0, 38); TabBtn.BackgroundColor3 = Color3.fromRGB(30,30,35); TabBtn.BackgroundTransparency = 1
 		TabBtn.Text = name; TabBtn.TextColor3 = Theme.TextDark; TabBtn.Font = "GothamMedium"; TabBtn.TextSize = 14
+		TabBtn.ClipsDescendants = true -- FIX : L'onde ne dépasse pas ici
 		Instance.new("UICorner", TabBtn)
 
 		TabBtn.MouseButton1Click:Connect(function()
@@ -104,10 +111,7 @@ function Library:CreateWindow(title)
 		end)
 
 		if firstPage then 
-			Page.Visible = true; 
-			TabBtn.TextColor3 = Theme.Accent; 
-			TabBtn.BackgroundTransparency = 0.8;
-			firstPage = false 
+			Page.Visible = true; TabBtn.TextColor3 = Theme.Accent; TabBtn.BackgroundTransparency = 0.8; firstPage = false 
 		end
 
 		local PageActions = {}
@@ -127,7 +131,7 @@ function Library:CreateWindow(title)
 			function SecActions:AddButton(t, c)
 				local B = Instance.new("TextButton", Sec); B.Size = UDim2.new(0.92, 0, 0, 38); B.BackgroundColor3 = Theme.Main
 				B.Text = "  " .. t; B.TextColor3 = Theme.Text; B.Font = "GothamMedium"; B.TextSize = 13; B.TextXAlignment = "Left"
-				B.AutoButtonColor = false; B.ClipsDescendants = true; Instance.new("UICorner", B)
+				B.AutoButtonColor = false; B.ClipsDescendants = true; Instance.new("UICorner", B) -- FIX : ClipsDescendants activé
 				local BS = Instance.new("UIStroke", B); BS.Color = Theme.Outline
 				B.MouseEnter:Connect(function() TS:Create(BS, TweenInfo.new(0.3), {Color = Theme.Accent}):Play() end)
 				B.MouseLeave:Connect(function() TS:Create(BS, TweenInfo.new(0.3), {Color = Theme.Outline}):Play() end)
