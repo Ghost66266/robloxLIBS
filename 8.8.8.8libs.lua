@@ -174,7 +174,7 @@ function Library:CreateWindow(Config)
 
 		local TabFuncs = {}
 		function TabFuncs:AddSection(Title)
-			local Section = Instance.new("Frame", Page); Section.BackgroundColor3 = Library.Theme.Section; Section.Size = UDim2.new(1,0,0,30); Instance.new("UICorner", Section).CornerRadius = UDim.new(0, 4); Instance.new("UIStroke", Section).Color = Library.Theme.Outline
+			local Section = Instance.new("Frame", Page); Section.BackgroundColor3 = Library.Theme.Section; Section.Size = UDim2.new(1,0,0,30); Instance.new("UICorner", Section).CornerRadius = UDim.new(0, 9); Instance.new("UIStroke", Section).Color = Library.Theme.Outline
 			local SecTitle = Instance.new("TextLabel", Section); SecTitle.Size = UDim2.new(1,-20,0,30); SecTitle.Position = UDim2.new(0,10,0,0); SecTitle.BackgroundTransparency = 1
 			SecTitle.Text = Title; SecTitle.TextColor3 = Library.Theme.TextDark; SecTitle.Font = Enum.Font.GothamBold
 			SecTitle.TextSize = Library.Theme.TextSize.Section
