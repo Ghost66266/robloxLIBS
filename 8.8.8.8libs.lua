@@ -8,44 +8,61 @@ local Library = {}
 local Theme = {
 	Main = Color3.fromRGB(10, 10, 12),
 	Section = Color3.fromRGB(18, 18, 22),
-	Accent = Color3.fromRGB(170, 0, 255), -- Violet signature
+	Accent = Color3.fromRGB(170, 0, 255),
 	Outline = Color3.fromRGB(45, 45, 50),
 	Text = Color3.fromRGB(255, 255, 255)
 }
 
--- [[ EFFET RIPPLE ]] --
+-- [[ EFFET DE CHOC VIOLET (RIPPLE) ]] --
 local function CreateRipple(obj)
 	local Mouse = game.Players.LocalPlayer:GetMouse()
-	local Circle = Instance.new("ImageLabel", obj)
+	local Circle = Instance.new("ImageLabel")
+	Circle.Name = "Ripple"
+	Circle.Parent = obj
+	Circle.BackgroundColor3 = Color3.new(1, 1, 1)
 	Circle.BackgroundTransparency = 1
 	Circle.Image = "rbxassetid://266543268"
-	Circle.ImageColor3 = Color3.new(1, 1, 1)
-	Circle.ImageTransparency = 0.6
+	Circle.ImageColor3 = Theme.Accent -- Violet
+	Circle.ImageTransparency = 0.4
 	Circle.ZIndex = 10
-	Circle.Position = UDim2.new(0, Mouse.X - obj.AbsolutePosition.X, 0, Mouse.Y - obj.AbsolutePosition.Y)
+	
+	local RelX = Mouse.X - obj.AbsolutePosition.X
+	local RelY = Mouse.Y - obj.AbsolutePosition.Y
+	Circle.Position = UDim2.new(0, RelX, 0, RelY)
 	Circle.AnchorPoint = Vector2.new(0.5, 0.5)
-	TS:Create(Circle, TweenInfo.new(0.5, Enum.EasingStyle.Quart), {
-		Size = UDim2.new(0, obj.AbsoluteSize.X * 2.5, 0, obj.AbsoluteSize.X * 2.5),
+	Circle.Size = UDim2.new(0, 0, 0, 0)
+	
+	-- Animation de l'onde
+	TS:Create(Circle, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+		Size = UDim2.new(0, obj.AbsoluteSize.X * 2, 0, obj.AbsoluteSize.X * 2),
 		ImageTransparency = 1
 	}):Play()
+	
 	Debris:AddItem(Circle, 0.6)
 end
 
-function Library:CreateWelcomeScreen()
+-- [[ ACCUEIL PERSONNALISABLE ]] --
+function Library:CreateWelcomeScreen(customText)
 	local WelcomeGui = Instance.new("ScreenGui", CoreGui)
 	WelcomeGui.IgnoreGuiInset = true
+	
 	local TextLabel = Instance.new("TextLabel", WelcomeGui)
 	TextLabel.Size = UDim2.new(1, 0, 0, 200)
 	TextLabel.Position = UDim2.new(0, 0, 0.5, -100)
 	TextLabel.BackgroundTransparency = 1
-	TextLabel.Text = "8.8.8.8 <font color='#AA00FF'>VIRTUAL</font> ENGINE"
+	-- Utilise le texte personnalisé ou un texte par défaut
+	TextLabel.Text = customText or "WELCOME <font color='#AA00FF'>8.8.8.8</font> UI"
 	TextLabel.RichText = true
 	TextLabel.TextColor3 = Color3.new(1, 1, 1)
 	TextLabel.Font = Enum.Font.GothamBold
 	TextLabel.TextSize = 1
-	TS:Create(TextLabel, TweenInfo.new(1.2, Enum.EasingStyle.Back), {TextSize = 85}):Play()
-	task.delay(4, function()
-		TS:Create(TextLabel, TweenInfo.new(1), {TextTransparency = 1}):Play()
+	TextLabel.TextTransparency = 1
+
+	-- Animation d'apparition
+	TS:Create(TextLabel, TweenInfo.new(1, Enum.EasingStyle.Back), {TextSize = 80, TextTransparency = 0}):Play()
+	
+	task.delay(3.5, function()
+		TS:Create(TextLabel, TweenInfo.new(1), {TextTransparency = 1, TextSize = 90}):Play()
 		Debris:AddItem(WelcomeGui, 1.1)
 	end)
 end
@@ -117,11 +134,24 @@ function Library:CreateWindow(title)
 			Btn.ClipsDescendants = true
 			Btn.AutoButtonColor = false
 			Instance.new("UICorner", Btn)
+			
 			local BStroke = Instance.new("UIStroke", Btn)
 			BStroke.Color = Theme.Outline
-			Btn.MouseEnter:Connect(function() TS:Create(BStroke, TweenInfo.new(0.3), {Color = Theme.Accent}):Play() end)
-			Btn.MouseLeave:Connect(function() TS:Create(BStroke, TweenInfo.new(0.3), {Color = Theme.Outline}):Play() end)
-			Btn.MouseButton1Click:Connect(function() CreateRipple(Btn); callback() end)
+			
+			-- Animations Hover
+			Btn.MouseEnter:Connect(function() 
+				TS:Create(BStroke, TweenInfo.new(0.3), {Color = Theme.Accent}):Play()
+				TS:Create(Btn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(15, 15, 20)}):Play()
+			end)
+			Btn.MouseLeave:Connect(function() 
+				TS:Create(BStroke, TweenInfo.new(0.3), {Color = Theme.Outline}):Play()
+				TS:Create(Btn, TweenInfo.new(0.3), {BackgroundColor3 = Theme.Main}):Play()
+			end)
+			
+			Btn.MouseButton1Click:Connect(function() 
+				CreateRipple(Btn) -- L'onde violette !
+				callback() 
+			end)
 		end
 
 		function SectionActions:AddSlider(text, min, max, default, callback)
@@ -137,7 +167,8 @@ function Library:CreateWindow(title)
 			Fill.Size = UDim2.new((default-min)/(max-min), 0, 1, 0); Fill.BackgroundColor3 = Theme.Accent; Instance.new("UICorner", Fill)
 			local function Update()
 				local p = math.clamp((UIS:GetMouseLocation().X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1)
-				Fill.Size = UDim2.new(p, 0, 1, 0); local v = math.floor(min + (max-min)*p)
+				TS:Create(Fill, TweenInfo.new(0.1), {Size = UDim2.new(p, 0, 1, 0)}):Play()
+				local v = math.floor(min + (max-min)*p)
 				Label.Text = "  " .. text .. " : " .. v; callback(v)
 			end
 			local s = false
