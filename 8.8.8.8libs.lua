@@ -236,6 +236,71 @@ function Library:CreateWindow(Config)
 		end
 		return TabFuncs
 	end
+	-- [ NOUVELLE FONCTION : CARTE DE PROFIL ] --
+	function WindowFuncs:AddProfile()
+		local Player = Players.LocalPlayer
+		local UserId = Player.UserId
+		local ThumbType = Enum.ThumbnailType.HeadShot
+		local ThumbSize = Enum.ThumbnailSize.Size48x48
+		local Content, IsReady = Players:GetUserThumbnailAsync(UserId, ThumbType, ThumbSize)
+
+		-- 1. On réduit la taille de la liste des onglets pour faire de la place en bas
+		TabContainer.Size = UDim2.new(1, 0, 1, -130) -- On laisse 60px en bas pour le profil
+
+		-- 2. Création du cadre Profil
+		local ProfileFrame = Instance.new("Frame", Sidebar)
+		ProfileFrame.Name = "UserProfile"
+		ProfileFrame.Size = UDim2.new(1, -20, 0, 50)
+		ProfileFrame.Position = UDim2.new(0, 10, 1, -60) -- Tout en bas
+		ProfileFrame.BackgroundColor3 = Library.Theme.Main -- Un peu plus foncé que la sidebar
+		ProfileFrame.BorderSizePixel = 0
+		ProfileFrame.ZIndex = 10
+		
+		Instance.new("UICorner", ProfileFrame).CornerRadius = UDim.new(0, 8)
+		Instance.new("UIStroke", ProfileFrame).Color = Library.Theme.Outline
+
+		-- 3. Image de l'Avatar (Rond)
+		local Avatar = Instance.new("ImageLabel", ProfileFrame)
+		Avatar.Size = UDim2.new(0, 36, 0, 36)
+		Avatar.Position = UDim2.new(0, 8, 0.5, 0)
+		Avatar.AnchorPoint = Vector2.new(0, 0.5)
+		Avatar.BackgroundTransparency = 1
+		Avatar.Image = Content -- L'image récupérée
+		
+		local Round = Instance.new("UICorner", Avatar)
+		Round.CornerRadius = UDim.new(1, 0) -- Cercle parfait
+
+		-- 4. Nom d'affichage (Gros)
+		local DispName = Instance.new("TextLabel", ProfileFrame)
+		DispName.Size = UDim2.new(1, -60, 0, 18)
+		DispName.Position = UDim2.new(0, 52, 0, 8)
+		DispName.BackgroundTransparency = 1
+		DispName.Text = Player.DisplayName
+		DispName.TextColor3 = Library.Theme.Text
+		DispName.Font = Enum.Font.GothamBold
+		DispName.TextSize = 13
+		DispName.TextXAlignment = Enum.TextXAlignment.Left
+
+		-- 5. Pseudo @ (Petit et gris)
+		local UserName = Instance.new("TextLabel", ProfileFrame)
+		UserName.Size = UDim2.new(1, -60, 0, 15)
+		UserName.Position = UDim2.new(0, 52, 0, 26)
+		UserName.BackgroundTransparency = 1
+		UserName.Text = "@" .. Player.Name
+		UserName.TextColor3 = Library.Theme.TextDark
+		UserName.Font = Enum.Font.Gotham
+		UserName.TextSize = 11
+		UserName.TextXAlignment = Enum.TextXAlignment.Left
+		
+		-- Petit effet visuel au survol
+		local Scale = Instance.new("UIScale", ProfileFrame)
+		ProfileFrame.MouseEnter:Connect(function()
+			Tween(ProfileFrame, {BackgroundColor3 = Library.Theme.Hover}, 0.2)
+		end)
+		ProfileFrame.MouseLeave:Connect(function()
+			Tween(ProfileFrame, {BackgroundColor3 = Library.Theme.Main}, 0.2)
+		end)
+	end
 	return WindowFuncs
 end
 return Library
