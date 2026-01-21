@@ -14,56 +14,60 @@ local Theme = {
 }
 
 function Library:CreateWelcomeScreen()
+	local Debris = game:GetService("Debris")
+	
 	local WelcomeGui = Instance.new("ScreenGui", CoreGui)
-	WelcomeGui.Name = "8888_Welcome_Final"
-	WelcomeGui.DisplayOrder = 999
-	WelcomeGui.IgnoreGuiInset = true -- FORCE LE FOND À PRENDRE TOUT L'ÉCRAN (Même en haut)
+	WelcomeGui.Name = "8888_Welcome_Ultra"
+	WelcomeGui.DisplayOrder = 999999 -- Priorité absolue
+	WelcomeGui.IgnoreGuiInset = true 
 
+	-- FOND NOIR TOTAL (On déborde de l'écran pour être sûr)
 	local BackFrame = Instance.new("Frame", WelcomeGui)
-	BackFrame.Size = UDim2.new(1, 0, 1, 0)
+	BackFrame.Size = UDim2.new(2, 0, 2, 0) -- 2x la taille de l'écran
+	BackFrame.Position = UDim2.new(-0.5, 0, -0.5, 0) -- Centré pour tout couvrir
 	BackFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 	BackFrame.BackgroundTransparency = 1
 	BackFrame.BorderSizePixel = 0
 	BackFrame.ZIndex = 1
 
 	local TextLabel = Instance.new("TextLabel", WelcomeGui)
-	TextLabel.Size = UDim2.new(1, 0, 0, 200)
-	TextLabel.Position = UDim2.new(0, 0, 0.5, -100)
+	TextLabel.Size = UDim2.new(1, 0, 0, 300)
+	TextLabel.Position = UDim2.new(0, 0, 0.5, -150)
 	TextLabel.BackgroundTransparency = 1
 	TextLabel.Text = "WELCOME <font color='#AA00FF'>8.8.8.8</font> UI"
 	TextLabel.RichText = true
 	TextLabel.TextColor3 = Color3.new(1, 1, 1)
 	TextLabel.Font = Enum.Font.GothamBold
-	TextLabel.TextSize = 0 -- Commence à 0 pour l'effet de zoom
+	TextLabel.TextSize = 85 -- TEXTE GÉANT
 	TextLabel.TextTransparency = 1
 	TextLabel.ZIndex = 2
 
-	-- Animation d'entrée puissante
-	TS:Create(BackFrame, TweenInfo.new(0.8), {BackgroundTransparency = 0.35}):Play()
-	TS:Create(TextLabel, TweenInfo.new(1.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-		TextSize = 70, -- TEXTE BIEN GRAND
-		TextTransparency = 0
-	}):Play()
+	-- ANIMATION D'ENTRÉE
+	TS:Create(BackFrame, TweenInfo.new(1), {BackgroundTransparency = 0.3}):Play()
+	local ShowText = TS:Create(TextLabel, TweenInfo.new(1.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+		TextTransparency = 0,
+		TextSize = 90
+	})
+	ShowText:Play()
 
-	-- Effet de pulsation pendant l'attente
+	-- ON FORCE L'ATTENTE (On ne sort pas d'ici avant 7 secondes réelles)
+	local StartTime = tick()
 	task.spawn(function()
-		while TextLabel.Parent do
-			TS:Create(TextLabel, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {TextSize = 75}):Play()
+		while (tick() - StartTime) < 7 do
+			TS:Create(TextLabel, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {TextColor3 = Theme.Accent}):Play()
 			task.wait(1)
-			TS:Create(TextLabel, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {TextSize = 70}):Play()
+			TS:Create(TextLabel, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {TextColor3 = Color3.new(1,1,1)}):Play()
 			task.wait(1)
 		end
-	end)
-
-	-- DURÉE ALLONGÉE (6 secondes au lieu de 3)
-	task.delay(6, function()
+		
+		-- ANIMATION DE SORTIE
 		TS:Create(TextLabel, TweenInfo.new(1, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
 			TextTransparency = 1,
-			TextSize = 100 -- Zoom final avant de disparaître
+			TextSize = 120
 		}):Play()
 		TS:Create(BackFrame, TweenInfo.new(1), {BackgroundTransparency = 1}):Play()
 		
-		task.wait(1)
+		task.wait(1.1)
 		WelcomeGui:Destroy()
 	end)
 end
