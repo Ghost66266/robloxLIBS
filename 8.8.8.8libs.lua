@@ -1,5 +1,5 @@
 -- [[ 8.8.8.8 NEVER-WIN UI LIBRARY ]] --
--- [[ VERSION: V11.5 FIXED | AUTHOR: GHOST66266 ]] --
+-- [[ VERSION: V12 STABLE (NO ERRORS) | AUTHOR: GHOST66266 ]] --
 
 local UIS = game:GetService("UserInputService")
 local TS = game:GetService("TweenService")
@@ -60,8 +60,9 @@ local function TweenObj(obj, properties, time)
 	TS:Create(obj, TweenInfo.new(time or 0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), properties):Play()
 end
 
--- [ SYSTÈME DE BIENVENUE CINÉMATIQUE (CORRIGÉ) ] --
+-- [ SYSTÈME DE BIENVENUE CINÉMATIQUE (FIXED) ] --
 function Library:Welcome(TitleText, SubText)
+	-- Nettoyage préventif
 	for _, v in pairs(CoreGui:GetChildren()) do
 		if v.Name == "8888_Intro" then v:Destroy() end
 	end
@@ -71,15 +72,18 @@ function Library:Welcome(TitleText, SubText)
 	Screen.IgnoreGuiInset = true
 	Screen.DisplayOrder = 10000
 
+	-- Effet Blur
 	local Blur = Instance.new("BlurEffect", Lighting)
 	Blur.Size = 0
 	
+	-- Fond
 	local BackFrame = Instance.new("Frame", Screen)
 	BackFrame.Size = UDim2.new(1, 0, 1, 0)
 	BackFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 	BackFrame.BackgroundTransparency = 1
 	BackFrame.ZIndex = 1
 
+	-- Titre Principal
 	local MainLabel = Instance.new("TextLabel", Screen)
 	MainLabel.Size = UDim2.new(1, 0, 0, 150)
 	MainLabel.Position = UDim2.new(0, 0, 0.4, 0)
@@ -91,6 +95,7 @@ function Library:Welcome(TitleText, SubText)
 	MainLabel.TextTransparency = 1
 	MainLabel.ZIndex = 2
 	
+	-- Sous-Titre
 	local SubLabel = Instance.new("TextLabel", Screen)
 	SubLabel.Size = UDim2.new(1, 0, 0, 50)
 	SubLabel.Position = UDim2.new(0, 0, 0.55, 0)
@@ -100,9 +105,10 @@ function Library:Welcome(TitleText, SubText)
 	SubLabel.Font = Enum.Font.GothamBold
 	SubLabel.TextSize = 20
 	SubLabel.TextTransparency = 1
-	-- J'ai retiré la ligne TextSpacing qui faisait crash
 	SubLabel.ZIndex = 2
+	-- J'AI SUPPRIMÉ LA LIGNE 'TextSpacing' QUI FAISAIT CRASH
 
+	-- Animation
 	task.spawn(function()
 		TS:Create(Blur, TweenInfo.new(1), {Size = 24}):Play()
 		TS:Create(BackFrame, TweenInfo.new(0.5), {BackgroundTransparency = 0.1}):Play()
@@ -121,7 +127,7 @@ function Library:Welcome(TitleText, SubText)
 			TextTransparency = 0
 		}):Play()
 
-		task.wait(2.5)
+		task.wait(2.5) -- Temps d'attente
 
 		TS:Create(MainLabel, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.In), {TextSize = 0, TextTransparency = 1}):Play()
 		TS:Create(SubLabel, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
