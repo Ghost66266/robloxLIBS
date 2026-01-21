@@ -85,6 +85,14 @@ Library.Theme = {
     Outline     = Color3.fromRGB(45, 45, 55),       -- Bordures
     Hover       = Color3.fromRGB(35, 35, 40),       -- Effet Survol
     Input       = Color3.fromRGB(15, 15, 20)        -- Fond Inputs
+
+	-- AJOUTE ÇA :
+    TextSize = {
+        Title = 18,       -- Taille du Titre du menu
+        Tab = 13,         -- Taille des Onglets
+        Section = 11,     -- Taille des Sections
+        Element = 12      -- Taille des Boutons/Toggles
+    }
 }
 
 -- [ 2. UTILITAIRES INTERNES ] --
@@ -177,6 +185,12 @@ end
 
 -- [ 3. CONSTRUCTEUR DE FENÊTRE ] --
 function Library:CreateWindow(Config)
+	if Config.TextSize then
+        if Config.TextSize.Title then Library.Theme.TextSize.Title = Config.TextSize.Title end
+        if Config.TextSize.Tab then Library.Theme.TextSize.Tab = Config.TextSize.Tab end
+        if Config.TextSize.Section then Library.Theme.TextSize.Section = Config.TextSize.Section end
+        if Config.TextSize.Element then Library.Theme.TextSize.Element = Config.TextSize.Element end
+    end
     local WindowName = Config.Title or "WindUI"
     local Size = Config.Size or UDim2.new(0, 650, 0, 400)
     
@@ -232,7 +246,7 @@ function Library:CreateWindow(Config)
     Title.RichText = true
     Title.TextColor3 = Library.Theme.Text
     Title.Font = Enum.Font.GothamMedium
-    Title.TextSize = 18
+    Title.TextSize = Library.Theme.TextSize.Title
     Title.TextXAlignment = Enum.TextXAlignment.Left
 
     local TabContainer = Instance.new("ScrollingFrame", Sidebar)
@@ -290,7 +304,7 @@ function Library:CreateWindow(Config)
         TabLabel.Text = Name
         TabLabel.TextColor3 = Library.Theme.TextDark
         TabLabel.Font = Enum.Font.GothamMedium
-        TabLabel.TextSize = 13
+        TabLabel.TextSize = Library.Theme.TextSize.Tab
         TabLabel.TextXAlignment = Enum.TextXAlignment.Left
 
         local Page = Instance.new("ScrollingFrame", Content)
@@ -364,7 +378,7 @@ function Library:CreateWindow(Config)
             SecTitle.Text = Title
             SecTitle.TextColor3 = Library.Theme.TextDark
             SecTitle.Font = Enum.Font.GothamBold
-            SecTitle.TextSize = 11
+            SecTitle.TextSize = Library.Theme.TextSize.Section
             SecTitle.TextXAlignment = Enum.TextXAlignment.Left
             
             local Container = Instance.new("Frame", Section)
@@ -390,7 +404,7 @@ function Library:CreateWindow(Config)
                 Btn.Text = Text
                 Btn.TextColor3 = Library.Theme.Text
                 Btn.Font = Enum.Font.GothamBold
-                Btn.TextSize = 12
+                Btn.TextSize = Library.Theme.TextSize.Element
                 Btn.AutoButtonColor = false
                 Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 4)
                 Instance.new("UIStroke", Btn).Color = Library.Theme.Outline
@@ -416,7 +430,7 @@ function Library:CreateWindow(Config)
                 Lab.Text = Text
                 Lab.TextColor3 = Library.Theme.Text
                 Lab.Font = Enum.Font.GothamMedium
-                Lab.TextSize = 12
+                Lab.TextSize = Library.Theme.TextSize.Element
                 Lab.TextXAlignment = Enum.TextXAlignment.Left
                 
                 local Outer = Instance.new("Frame", Tgl)
@@ -453,7 +467,7 @@ function Library:CreateWindow(Config)
                 Lab.Text = Text
                 Lab.TextColor3 = Library.Theme.Text
                 Lab.Font = Enum.Font.GothamMedium
-                Lab.TextSize = 12
+                Lab.TextSize = Library.Theme.TextSize.Element
                 Lab.TextXAlignment = Enum.TextXAlignment.Left
                 
                 local Val = Instance.new("TextLabel", SldFrame)
@@ -462,7 +476,7 @@ function Library:CreateWindow(Config)
                 Val.Text = tostring(Default)
                 Val.TextColor3 = Library.Theme.TextDark
                 Val.Font = Enum.Font.GothamBold
-                Val.TextSize = 12
+                Val.TextSize = Library.Theme.TextSize.Element
                 Val.TextXAlignment = Enum.TextXAlignment.Right
                 
                 local Bar = Instance.new("Frame", SldFrame)
@@ -511,7 +525,7 @@ function Library:CreateWindow(Config)
                 Lab.Text = Text .. ": " .. (Default or "...")
                 Lab.TextColor3 = Library.Theme.Text
                 Lab.Font = Enum.Font.GothamMedium
-                Lab.TextSize = 12
+                Lab.TextSize = Library.Theme.TextSize.Element
                 Lab.TextXAlignment = Enum.TextXAlignment.Left
                 
                 local Arrow = Instance.new("ImageLabel", Btn)
@@ -547,7 +561,7 @@ function Library:CreateWindow(Config)
                     IB.Text = "  " .. item
                     IB.TextColor3 = Library.Theme.TextDark
                     IB.Font = Enum.Font.Gotham
-                    IB.TextSize = 12
+                    IB.TextSize = Library.Theme.TextSize.Element
                     IB.TextXAlignment = Enum.TextXAlignment.Left
                     
                     IB.MouseButton1Click:Connect(function()
@@ -578,7 +592,7 @@ function Library:CreateWindow(Config)
                 Input.TextColor3 = Library.Theme.Text
                 Input.PlaceholderColor3 = Library.Theme.TextDark
                 Input.Font = Enum.Font.GothamMedium
-                Input.TextSize = 12
+                Input.TextSize = Library.Theme.TextSize.Element
                 Input.TextXAlignment = Enum.TextXAlignment.Left
                 
                 Input.FocusLost:Connect(function()
