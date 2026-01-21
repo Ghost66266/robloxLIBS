@@ -14,27 +14,53 @@ local Theme = {
 	TextDark = Color3.fromRGB(160, 160, 165)
 }
 
--- [[ EFFET ONDE ]] --
-local function CreateRipple(obj)
-	local Mouse = game.Players.LocalPlayer:GetMouse()
-	local Circle = Instance.new("ImageLabel")
-	Circle.Parent = obj
-	Circle.BackgroundColor3 = Color3.new(1, 1, 1)
-	Circle.BackgroundTransparency = 1
-	Circle.Image = "rbxassetid://266543268"
-	Circle.ImageColor3 = Theme.Accent
-	Circle.ImageTransparency = 0.5
-	Circle.ZIndex = 10
-	local RelX = Mouse.X - obj.AbsolutePosition.X
-	local RelY = Mouse.Y - obj.AbsolutePosition.Y
-	Circle.Position = UDim2.new(0, RelX, 0, RelY)
-	Circle.AnchorPoint = Vector2.new(0.5, 0.5)
-	TS:Create(Circle, TweenInfo.new(0.5), {Size = UDim2.new(0, obj.AbsoluteSize.X * 2.5, 0, obj.AbsoluteSize.X * 2.5), ImageTransparency = 1}):Play()
-	Debris:AddItem(Circle, 0.6)
+-- [[ 1. ANTI-DOUBLON AUTOMATIQUE ]] --
+local function CheckForExistingUI(name)
+	local existing = CoreGui:FindFirstChild(name)
+	if existing then
+		existing:Destroy() -- Supprime l'ancien menu s'il existe
+	end
 end
 
--- [[ ACCUEIL SANS FOND ]] --
+-- [[ 2. FONCTION DRAG (DÉPLACEMENT) ]] --
+local function MakeDraggable(topbarobject, object)
+	local dragging = false
+	local dragInput
+	local dragStart
+	local startPos
+
+	topbarobject.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPos = object.Position
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
+		end
+	end)
+
+	topbarobject.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+			dragInput = input
+		end
+	end)
+
+	UIS.InputChanged:Connect(function(input)
+		if input == dragInput and dragging then
+			local delta = input.Position - dragStart
+			TS:Create(object, TweenInfo.new(0.15, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+				Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+			}):Play()
+		end
+	end)
+end
+
+-- [[ 3. ACCUEIL SANS FOND ]] --
 function Library:CreateWelcomeScreen()
+	CheckForExistingUI("8888_Welcome") -- Anti-doublon écran accueil
 	local WelcomeGui = Instance.new("ScreenGui", CoreGui)
 	WelcomeGui.Name = "8888_Welcome"
 	WelcomeGui.IgnoreGuiInset = true
@@ -60,8 +86,10 @@ function Library:CreateWelcomeScreen()
 	end)
 end
 
--- [[ FENÊTRE ]] --
+-- [[ 4. FENÊTRE ]] --
 function Library:CreateWindow(title)
+	CheckForExistingUI("8888_Main") -- Anti-doublon menu principal
+	
 	local UI = Instance.new("ScreenGui", CoreGui)
 	UI.Name = "8888_Main"
 
@@ -76,6 +104,9 @@ function Library:CreateWindow(title)
 	Header.Size = UDim2.new(1, 0, 0, 45)
 	Header.BackgroundColor3 = Theme.Section
 	Instance.new("UICorner", Header)
+	
+	-- Activer le déplacement sur le Header
+	MakeDraggable(Header, Main)
 
 	local Title = Instance.new("TextLabel", Header)
 	Title.Size = UDim2.new(1, 0, 1, 0)
@@ -113,6 +144,7 @@ function Library:CreateWindow(title)
 		CLayout.Padding = UDim.new(0, 6)
 		CLayout.HorizontalAlignment = "Center"
 		Instance.new("UIPadding", Container).PaddingTop = UDim.new(0, 12)
+		Instance.new("UIPadding", Container).PaddingBottom = UDim.new(0, 10)
 
 		local SectionActions = {}
 
@@ -125,10 +157,9 @@ function Library:CreateWindow(title)
 			Btn.Font = "GothamMedium"
 			Btn.TextSize = 13
 			Btn.TextXAlignment = "Left"
-			Btn.ClipsDescendants = true
 			Btn.AutoButtonColor = false
 			Instance.new("UICorner", Btn)
-			Btn.MouseButton1Click:Connect(function() CreateRipple(Btn) callback() end)
+			Btn.MouseButton1Click:Connect(function() callback() end)
 		end
 		
 		return SectionActions
