@@ -232,13 +232,14 @@ function Library:CreateWindow(Config)
 				Input.TextSize = Library.Theme.TextSize.Element
 				Input.TextXAlignment = Enum.TextXAlignment.Left; Input.FocusLost:Connect(function() pcall(Callback, Input.Text) end)
 			end
-			return SecFuncs
+return SecFuncs
 		end
 		return TabFuncs
-		end
+	end -- Ferme la fonction AddTab
+
 	-- [ VERSION V29 : FORCE VISIBLE ] --
 	function WindowFuncs:AddProfile()
-		print("DEBUG: Lancement création profil...") -- Vérifie la console F9
+		print("DEBUG: Lancement création profil...") 
 		local Player = Players.LocalPlayer
 		
 		-- 1. Ajustement espace
@@ -249,9 +250,9 @@ function Library:CreateWindow(Config)
 		ProfileFrame.Name = "UserProfile"
 		ProfileFrame.Size = UDim2.new(1, -20, 0, 50)
 		ProfileFrame.Position = UDim2.new(0, 10, 1, -60)
-		ProfileFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35) -- Gris légèrement plus clair
+		ProfileFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 		ProfileFrame.BorderSizePixel = 0
-		ProfileFrame.ZIndex = 20 -- ZIndex élevé
+		ProfileFrame.ZIndex = 20
 		
 		Instance.new("UICorner", ProfileFrame).CornerRadius = UDim.new(0, 8)
 		Instance.new("UIStroke", ProfileFrame).Color = Library.Theme.Outline
@@ -263,21 +264,20 @@ function Library:CreateWindow(Config)
 		Avatar.Position = UDim2.new(0, 8, 0.5, 0)
 		Avatar.AnchorPoint = Vector2.new(0, 0.5)
 		Avatar.BackgroundTransparency = 1
-		Avatar.Image = "rbxassetid://0" -- Placeholder
-		Avatar.ZIndex = 30 -- Doit être supérieur au fond (20)
+		Avatar.Image = "rbxassetid://0"
+		Avatar.ZIndex = 30
 		
 		Instance.new("UICorner", Avatar).CornerRadius = UDim.new(1, 0)
 
 		-- Chargement Image Sécurisé
 		task.spawn(function()
-			-- On essaie de récupérer l'image
 			local success, content = pcall(function()
 				return Players:GetUserThumbnailAsync(Player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48)
 			end)
 			if success then
 				Avatar.Image = content
 			else
-				Avatar.Image = "rbxassetid://16645563" -- Image par défaut si échec (Blocky)
+				Avatar.Image = "rbxassetid://16645563"
 			end
 		end)
 
@@ -288,11 +288,11 @@ function Library:CreateWindow(Config)
 		DispName.Position = UDim2.new(0, 52, 0, 8)
 		DispName.BackgroundTransparency = 1
 		DispName.Text = Player.DisplayName or "Player"
-		DispName.TextColor3 = Color3.fromRGB(255, 255, 255) -- BLANC FORCÉ
+		DispName.TextColor3 = Color3.fromRGB(255, 255, 255)
 		DispName.Font = Enum.Font.GothamBold
 		DispName.TextSize = 13
 		DispName.TextXAlignment = Enum.TextXAlignment.Left
-		DispName.ZIndex = 30 -- Supérieur au fond
+		DispName.ZIndex = 30
 
 		-- 5. Le Pseudo (USERNAME)
 		local UserName = Instance.new("TextLabel", ProfileFrame)
@@ -301,13 +301,16 @@ function Library:CreateWindow(Config)
 		UserName.Position = UDim2.new(0, 52, 0, 26)
 		UserName.BackgroundTransparency = 1
 		UserName.Text = "@" .. (Player.Name or "Guest")
-		UserName.TextColor3 = Color3.fromRGB(180, 180, 180) -- GRIS CLAIR FORCÉ
+		UserName.TextColor3 = Color3.fromRGB(180, 180, 180)
 		UserName.Font = Enum.Font.Gotham
 		UserName.TextSize = 11
 		UserName.TextXAlignment = Enum.TextXAlignment.Left
-		UserName.ZIndex = 30 -- Supérieur au fond
+		UserName.ZIndex = 30
 		
 		print("DEBUG: Profil créé avec succès.")
+	end -- <--- C'EST CE "END" QU'IL MANQUAIT !
+
 	return WindowFuncs
 end
+
 return Library
