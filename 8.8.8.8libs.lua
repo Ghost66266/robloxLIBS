@@ -10,53 +10,68 @@ local Players = game:GetService("Players")
 local Library = {}
 Library.Windows = {}
 
--- [ REMPLACE TOUTE LA FONCTION Library:Welcome PAR CELLE-CI ] --
+-- [ REMPLACE UNIQUEMENT CETTE FONCTION ] --
 function Library:Welcome(TitleText, SubText)
-    -- 1. Nettoyage si une intro existe déjà
-    for _, v in pairs(CoreGui:GetChildren()) do if v.Name == "8888_Intro" then v:Destroy() end end
+	-- 1. On nettoie si une intro existe déjà
+	for _, v in pairs(CoreGui:GetChildren()) do 
+		if v.Name == "8888_Intro" then v:Destroy() end 
+	end
 
-    local Screen = Instance.new("ScreenGui", CoreGui)
-    Screen.Name = "8888_Intro"
-    Screen.IgnoreGuiInset = true
-    Screen.DisplayOrder = 10000 -- FORCE LE PREMIER PLAN (DEVANT TOUT)
-    ProtectGui(Screen)
+	-- 2. Création du GUI d'Intro
+	local Screen = Instance.new("ScreenGui")
+	Screen.Name = "8888_Intro"
+	Screen.IgnoreGuiInset = true
+	Screen.DisplayOrder = 10000 -- Toujours tout devant
+	
+	-- Protection basique
+	if syn and syn.protect_gui then 
+		syn.protect_gui(Screen)
+		Screen.Parent = CoreGui
+	elseif gethui then 
+		Screen.Parent = gethui()
+	else 
+		Screen.Parent = CoreGui
+	end
 
-    local Blur = Instance.new("BlurEffect", Lighting); Blur.Size = 0
-    local BackFrame = Instance.new("Frame", Screen); BackFrame.Size = UDim2.new(1,0,1,0); BackFrame.BackgroundColor3 = Color3.fromRGB(10,10,10); BackFrame.BackgroundTransparency = 1; BackFrame.ZIndex = 1
-    
-    local MainLabel = Instance.new("TextLabel", Screen); MainLabel.Size = UDim2.new(1,0,0,150); MainLabel.Position = UDim2.new(0,0,0.4,0); MainLabel.BackgroundTransparency = 1
-    MainLabel.Text = string.upper(TitleText or "LIBRARY"); MainLabel.TextColor3 = Library.Theme.Accent; MainLabel.Font = Enum.Font.GothamBlack; MainLabel.TextSize = 0; MainLabel.TextTransparency = 1; MainLabel.ZIndex = 2
-    
-    local SubLabel = Instance.new("TextLabel", Screen); SubLabel.Size = UDim2.new(1,0,0,50); SubLabel.Position = UDim2.new(0,0,0.55,0); SubLabel.BackgroundTransparency = 1
-    SubLabel.Text = string.upper(SubText or "INITIALIZING..."); SubLabel.TextColor3 = Library.Theme.Text; SubLabel.Font = Enum.Font.GothamBold; SubLabel.TextSize = 20; SubLabel.TextTransparency = 1; SubLabel.ZIndex = 2
+	local Blur = Instance.new("BlurEffect", Lighting); Blur.Size = 0
+	local BackFrame = Instance.new("Frame", Screen); BackFrame.Size = UDim2.new(1,0,1,0); BackFrame.BackgroundColor3 = Color3.fromRGB(10,10,10); BackFrame.BackgroundTransparency = 1; BackFrame.ZIndex = 1
+	
+	local MainLabel = Instance.new("TextLabel", Screen); MainLabel.Size = UDim2.new(1,0,0,150); MainLabel.Position = UDim2.new(0,0,0.4,0); MainLabel.BackgroundTransparency = 1
+	MainLabel.Text = string.upper(TitleText or "LIBRARY"); MainLabel.TextColor3 = Library.Theme.Accent; MainLabel.Font = Enum.Font.GothamBlack; MainLabel.TextSize = 0; MainLabel.TextTransparency = 1; MainLabel.ZIndex = 2
+	
+	local SubLabel = Instance.new("TextLabel", Screen); SubLabel.Size = UDim2.new(1,0,0,50); SubLabel.Position = UDim2.new(0,0,0.55,0); SubLabel.BackgroundTransparency = 1
+	SubLabel.Text = string.upper(SubText or "INITIALIZING..."); SubLabel.TextColor3 = Library.Theme.Text; SubLabel.Font = Enum.Font.GothamBold; SubLabel.TextSize = 20; SubLabel.TextTransparency = 1; SubLabel.ZIndex = 2
 
-    -- 2. ANIMATION SÉQUENTIELLE (SANS task.spawn pour bloquer le script)
-    Tween(Blur, {Size = 24}, 1)
-    Tween(BackFrame, {BackgroundTransparency = 0.1}, 0.5)
-    task.wait(0.5)
-    
-    local T1 = TweenService:Create(MainLabel, TweenInfo.new(0.8, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {TextSize = 90, TextTransparency = 0})
-    T1:Play()
-    task.wait(0.3)
-    
-    SubLabel.Position = UDim2.new(0,0,0.60,0)
-    local T2 = TweenService:Create(SubLabel, TweenInfo.new(0.8, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2.new(0,0,0.55,0), TextTransparency = 0})
-    T2:Play()
+	-- 3. ANIMATION (BLOQUANTE)
+	-- Ici, on n'utilise PAS task.spawn, ce qui force le script à attendre chaque ligne.
+	
+	TweenService:Create(Blur, TweenInfo.new(1), {Size = 24}):Play()
+	TweenService:Create(BackFrame, TweenInfo.new(0.5), {BackgroundTransparency = 0.1}):Play()
+	task.wait(0.5) -- Le script s'arrête ici 0.5s
 
-    task.wait(2.5) -- LE SCRIPT ATTEND ICI
+	local T1 = TweenService:Create(MainLabel, TweenInfo.new(0.8, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {TextSize = 90, TextTransparency = 0})
+	T1:Play()
+	task.wait(0.3) -- Pause 0.3s
+	
+	SubLabel.Position = UDim2.new(0,0,0.60,0)
+	local T2 = TweenService:Create(SubLabel, TweenInfo.new(0.8, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2.new(0,0,0.55,0), TextTransparency = 0})
+	T2:Play()
 
-    -- Sortie
-    Tween(MainLabel, {TextSize = 0, TextTransparency = 1}, 0.5, Enum.EasingStyle.Back, Enum.EasingDirection.In)
-    Tween(SubLabel, {TextTransparency = 1}, 0.5)
-    task.wait(0.2)
-    Tween(BackFrame, {BackgroundTransparency = 1}, 0.5)
-    Tween(Blur, {Size = 0}, 0.8)
-    
-    task.wait(0.8)
-    Screen:Destroy()
-    Blur:Destroy()
-    
-    -- MAINTENANT LE MENU PEUT S'OUVRIR
+	task.wait(2.5) -- GROSSE PAUSE : Le script attend que l'intro soit lue
+
+	-- Sortie
+	TweenService:Create(MainLabel, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.In), {TextSize = 0, TextTransparency = 1}):Play()
+	TweenService:Create(SubLabel, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
+	task.wait(0.2)
+	TweenService:Create(BackFrame, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
+	TweenService:Create(Blur, TweenInfo.new(0.8), {Size = 0}):Play()
+	
+	task.wait(0.8) -- Dernière pause pour la fin de l'anim
+	
+	Screen:Destroy()
+	Blur:Destroy()
+	
+	-- À PARTIR D'ICI, LE RESTE DU SCRIPT (Le Menu) PEUT SE LANCER
 end
 
 -- [ 1. CONFIGURATION & THEME ] --
