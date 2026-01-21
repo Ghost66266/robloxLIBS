@@ -307,7 +307,7 @@ function Library:CreateWindow(Config)
 		UserName.TextXAlignment = Enum.TextXAlignment.Left
 		UserName.ZIndex = 30 -- Supérieur au fond
 		
-		print("DEBUG: Profil créé avec succès.")end)
+		print("DEBUG: Profil créé avec succès.")
 	end
 	return WindowFuncs
 end
