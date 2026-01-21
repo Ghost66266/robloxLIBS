@@ -10,94 +10,53 @@ local Players = game:GetService("Players")
 local Library = {}
 Library.Windows = {}
 
--- [ FONCTION BIENVENUE AJOUTÉE ] --
+-- [ REMPLACE TOUTE LA FONCTION Library:Welcome PAR CELLE-CI ] --
 function Library:Welcome(TitleText, SubText)
-    -- On nettoie si une intro existe déjà
-    for _, v in pairs(game:GetService("CoreGui"):GetChildren()) do 
-        if v.Name == "8888_Intro" then v:Destroy() end 
-    end
+    -- 1. Nettoyage si une intro existe déjà
+    for _, v in pairs(CoreGui:GetChildren()) do if v.Name == "8888_Intro" then v:Destroy() end end
 
-    local TweenService = game:GetService("TweenService")
-    local Lighting = game:GetService("Lighting")
-
-    -- Création du GUI
-    local Screen = Instance.new("ScreenGui")
+    local Screen = Instance.new("ScreenGui", CoreGui)
     Screen.Name = "8888_Intro"
     Screen.IgnoreGuiInset = true
+    Screen.DisplayOrder = 10000 -- FORCE LE PREMIER PLAN (DEVANT TOUT)
+    ProtectGui(Screen)
+
+    local Blur = Instance.new("BlurEffect", Lighting); Blur.Size = 0
+    local BackFrame = Instance.new("Frame", Screen); BackFrame.Size = UDim2.new(1,0,1,0); BackFrame.BackgroundColor3 = Color3.fromRGB(10,10,10); BackFrame.BackgroundTransparency = 1; BackFrame.ZIndex = 1
     
-    -- Protection anti-détection basique
-    if syn and syn.protect_gui then 
-        syn.protect_gui(Screen)
-        Screen.Parent = game:GetService("CoreGui")
-    elseif gethui then 
-        Screen.Parent = gethui()
-    else 
-        Screen.Parent = game:GetService("CoreGui")
-    end
-
-    -- Effet de Flou
-    local Blur = Instance.new("BlurEffect", Lighting)
-    Blur.Size = 0
+    local MainLabel = Instance.new("TextLabel", Screen); MainLabel.Size = UDim2.new(1,0,0,150); MainLabel.Position = UDim2.new(0,0,0.4,0); MainLabel.BackgroundTransparency = 1
+    MainLabel.Text = string.upper(TitleText or "LIBRARY"); MainLabel.TextColor3 = Library.Theme.Accent; MainLabel.Font = Enum.Font.GothamBlack; MainLabel.TextSize = 0; MainLabel.TextTransparency = 1; MainLabel.ZIndex = 2
     
-    -- Fond sombre transparent
-    local BackFrame = Instance.new("Frame", Screen)
-    BackFrame.Size = UDim2.new(1, 0, 1, 0)
-    BackFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-    BackFrame.BackgroundTransparency = 1
-    BackFrame.ZIndex = 1
+    local SubLabel = Instance.new("TextLabel", Screen); SubLabel.Size = UDim2.new(1,0,0,50); SubLabel.Position = UDim2.new(0,0,0.55,0); SubLabel.BackgroundTransparency = 1
+    SubLabel.Text = string.upper(SubText or "INITIALIZING..."); SubLabel.TextColor3 = Library.Theme.Text; SubLabel.Font = Enum.Font.GothamBold; SubLabel.TextSize = 20; SubLabel.TextTransparency = 1; SubLabel.ZIndex = 2
 
-    -- Titre Principal (Gros)
-    local MainLabel = Instance.new("TextLabel", Screen)
-    MainLabel.Size = UDim2.new(1, 0, 0, 150)
-    MainLabel.Position = UDim2.new(0, 0, 0.4, 0)
-    MainLabel.BackgroundTransparency = 1
-    MainLabel.Text = string.upper(TitleText or "LIBRARY")
-    MainLabel.TextColor3 = Color3.fromRGB(170, 0, 255) -- Ton Violet
-    MainLabel.Font = Enum.Font.GothamBlack
-    MainLabel.TextSize = 0 -- Départ à 0 pour l'effet pop
-    MainLabel.TextTransparency = 1
-    MainLabel.ZIndex = 2
+    -- 2. ANIMATION SÉQUENTIELLE (SANS task.spawn pour bloquer le script)
+    Tween(Blur, {Size = 24}, 1)
+    Tween(BackFrame, {BackgroundTransparency = 0.1}, 0.5)
+    task.wait(0.5)
     
-    -- Sous-titre (Petit)
-    local SubLabel = Instance.new("TextLabel", Screen)
-    SubLabel.Size = UDim2.new(1, 0, 0, 50)
-    SubLabel.Position = UDim2.new(0, 0, 0.55, 0)
-    SubLabel.BackgroundTransparency = 1
-    SubLabel.Text = string.upper(SubText or "LOADING...")
-    SubLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    SubLabel.Font = Enum.Font.GothamBold
-    SubLabel.TextSize = 20
-    SubLabel.TextTransparency = 1
-    SubLabel.ZIndex = 2
+    local T1 = TweenService:Create(MainLabel, TweenInfo.new(0.8, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {TextSize = 90, TextTransparency = 0})
+    T1:Play()
+    task.wait(0.3)
+    
+    SubLabel.Position = UDim2.new(0,0,0.60,0)
+    local T2 = TweenService:Create(SubLabel, TweenInfo.new(0.8, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2.new(0,0,0.55,0), TextTransparency = 0})
+    T2:Play()
 
-    -- Animation
-    task.spawn(function()
-        -- 1. Apparition Flou + Fond
-        TweenService:Create(Blur, TweenInfo.new(1), {Size = 24}):Play()
-        TweenService:Create(BackFrame, TweenInfo.new(0.5), {BackgroundTransparency = 0.1}):Play()
-        task.wait(0.5)
+    task.wait(2.5) -- LE SCRIPT ATTEND ICI
 
-        -- 2. Pop du Titre
-        TweenService:Create(MainLabel, TweenInfo.new(0.8, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {TextSize = 90, TextTransparency = 0}):Play()
-        task.wait(0.3)
-        
-        -- 3. Glissement du Sous-titre
-        SubLabel.Position = UDim2.new(0, 0, 0.60, 0)
-        TweenService:Create(SubLabel, TweenInfo.new(0.8, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2.new(0, 0, 0.55, 0), TextTransparency = 0}):Play()
-
-        task.wait(2.5) -- Temps d'attente
-
-        -- 4. Disparition
-        TweenService:Create(MainLabel, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.In), {TextSize = 0, TextTransparency = 1}):Play()
-        TweenService:Create(SubLabel, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
-        task.wait(0.2)
-        TweenService:Create(BackFrame, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
-        TweenService:Create(Blur, TweenInfo.new(0.8), {Size = 0}):Play()
-        
-        task.wait(0.8)
-        Screen:Destroy()
-        Blur:Destroy()
-    end)
+    -- Sortie
+    Tween(MainLabel, {TextSize = 0, TextTransparency = 1}, 0.5, Enum.EasingStyle.Back, Enum.EasingDirection.In)
+    Tween(SubLabel, {TextTransparency = 1}, 0.5)
+    task.wait(0.2)
+    Tween(BackFrame, {BackgroundTransparency = 1}, 0.5)
+    Tween(Blur, {Size = 0}, 0.8)
+    
+    task.wait(0.8)
+    Screen:Destroy()
+    Blur:Destroy()
+    
+    -- MAINTENANT LE MENU PEUT S'OUVRIR
 end
 
 -- [ 1. CONFIGURATION & THEME ] --
