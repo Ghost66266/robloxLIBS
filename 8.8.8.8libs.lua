@@ -13,11 +13,11 @@ local Theme = {
 	Text = Color3.fromRGB(255, 255, 255)
 }
 
--- [[ ÉCRAN DE BIENVENUE RÉPARÉ ]] --
 function Library:CreateWelcomeScreen()
 	local WelcomeGui = Instance.new("ScreenGui", CoreGui)
-	WelcomeGui.Name = "8888_Welcome_Fix"
-	WelcomeGui.DisplayOrder = 999 -- Force l'affichage au premier plan
+	WelcomeGui.Name = "8888_Welcome_Final"
+	WelcomeGui.DisplayOrder = 999
+	WelcomeGui.IgnoreGuiInset = true -- FORCE LE FOND À PRENDRE TOUT L'ÉCRAN (Même en haut)
 
 	local BackFrame = Instance.new("Frame", WelcomeGui)
 	BackFrame.Size = UDim2.new(1, 0, 1, 0)
@@ -27,27 +27,46 @@ function Library:CreateWelcomeScreen()
 	BackFrame.ZIndex = 1
 
 	local TextLabel = Instance.new("TextLabel", WelcomeGui)
-	TextLabel.Size = UDim2.new(1, 0, 0, 100)
-	TextLabel.Position = UDim2.new(0, 0, 0.5, -50)
+	TextLabel.Size = UDim2.new(1, 0, 0, 200)
+	TextLabel.Position = UDim2.new(0, 0, 0.5, -100)
 	TextLabel.BackgroundTransparency = 1
-	TextLabel.Text = "WELCOME 8.8.8.8 UI" -- Simple texte sans balises pour tester
-	TextLabel.TextColor3 = Theme.Accent
+	TextLabel.Text = "WELCOME <font color='#AA00FF'>8.8.8.8</font> UI"
+	TextLabel.RichText = true
+	TextLabel.TextColor3 = Color3.new(1, 1, 1)
 	TextLabel.Font = Enum.Font.GothamBold
-	TextLabel.TextSize = 40
+	TextLabel.TextSize = 0 -- Commence à 0 pour l'effet de zoom
 	TextLabel.TextTransparency = 1
-	TextLabel.ZIndex = 2 -- Toujours au-dessus du fond noir
+	TextLabel.ZIndex = 2
 
-	-- Animation
-	TS:Create(BackFrame, TweenInfo.new(0.5), {BackgroundTransparency = 0.5}):Play()
-	TS:Create(TextLabel, TweenInfo.new(0.8, Enum.EasingStyle.Back), {TextTransparency = 0}):Play()
+	-- Animation d'entrée puissante
+	TS:Create(BackFrame, TweenInfo.new(0.8), {BackgroundTransparency = 0.35}):Play()
+	TS:Create(TextLabel, TweenInfo.new(1.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+		TextSize = 70, -- TEXTE BIEN GRAND
+		TextTransparency = 0
+	}):Play()
 
-	task.delay(3, function()
-		TS:Create(TextLabel, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
-		TS:Create(BackFrame, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
-		Debris:AddItem(WelcomeGui, 0.6)
+	-- Effet de pulsation pendant l'attente
+	task.spawn(function()
+		while TextLabel.Parent do
+			TS:Create(TextLabel, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {TextSize = 75}):Play()
+			task.wait(1)
+			TS:Create(TextLabel, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {TextSize = 70}):Play()
+			task.wait(1)
+		end
+	end)
+
+	-- DURÉE ALLONGÉE (6 secondes au lieu de 3)
+	task.delay(6, function()
+		TS:Create(TextLabel, TweenInfo.new(1, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
+			TextTransparency = 1,
+			TextSize = 100 -- Zoom final avant de disparaître
+		}):Play()
+		TS:Create(BackFrame, TweenInfo.new(1), {BackgroundTransparency = 1}):Play()
+		
+		task.wait(1)
+		WelcomeGui:Destroy()
 	end)
 end
-
 -- [[ FENÊTRE PRINCIPALE ]] --
 function Library:CreateWindow(title)
 	local UI = Instance.new("ScreenGui", CoreGui)
