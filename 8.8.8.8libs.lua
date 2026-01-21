@@ -106,41 +106,47 @@ function Library:Welcome(TitleText, SubText)
 	Tween(BackFrame, {BackgroundTransparency = 1}, 0.5); Tween(Blur, {Size = 0}, 0.8); task.wait(0.8); Screen:Destroy(); Blur:Destroy()
 end
 
--- [ 4. WINDOW ] --
 function Library:CreateWindow(Config)
 	local WindowName = Config.Title or "WindUI"
 	local Size = Config.Size or UDim2.new(0, 650, 0, 400)
 	
+	-- Mise à jour des configs (Texte, Tailles...)
 	if Config.TextSize then
 		if Config.TextSize.Title then Library.Theme.TextSize.Title = Config.TextSize.Title end
 		if Config.TextSize.Tab then Library.Theme.TextSize.Tab = Config.TextSize.Tab end
 		if Config.TextSize.Section then Library.Theme.TextSize.Section = Config.TextSize.Section end
 		if Config.TextSize.Element then Library.Theme.TextSize.Element = Config.TextSize.Element end
 	end
-	
-	-- [NOUVEAU] Mise à jour des tailles (Tab inclus)
 	if Config.ElementSize then
-		if Config.ElementSize.Tab then Library.Theme.Sizes.Tab = Config.ElementSize.Tab end -- ICI
+		if Config.ElementSize.Tab then Library.Theme.Sizes.Tab = Config.ElementSize.Tab end
 		if Config.ElementSize.Button then Library.Theme.Sizes.Element = Config.ElementSize.Button end
 		if Config.ElementSize.Slider then Library.Theme.Sizes.Slider = Config.ElementSize.Slider end
 		if Config.ElementSize.Gap then Library.Theme.Sizes.SectionGap = Config.ElementSize.Gap end
 	end
 	
+	-- Nettoyage ancienne interface
 	for _, ui in pairs(CoreGui:GetChildren()) do if ui.Name == "WindUI_" .. WindowName then ui:Destroy() end end
+	
 	local ScreenGui = Instance.new("ScreenGui"); ScreenGui.Name = "WindUI_" .. WindowName; ScreenGui.IgnoreGuiInset = true; ProtectGui(ScreenGui)
 
-	local Main = Instance.new("Frame", ScreenGui); Main.Name = "Main"; Main.Size = UDim2.new(0,0,0,0); Main.Position = UDim2.new(0.5,0,0.5,0); Main.AnchorPoint = Vector2.new(0.5,0.5); Main.BackgroundColor3 = Library.Theme.Main; Main.ClipsDescendants = true
-	-- -- [ CORRECTION BORDURE VIOLETTE ] --
-	-- Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 6)
+	-- [[ CRÉATION DE LA FENÊTRE PRINCIPALE (SANS BORDURE) ]] --
+	local Main = Instance.new("Frame", ScreenGui); 
+	Main.Name = "Main"; 
+	Main.Size = UDim2.new(0,0,0,0); 
+	Main.Position = UDim2.new(0.5,0,0.5,0); 
+	Main.AnchorPoint = Vector2.new(0.5,0.5); 
+	Main.BackgroundColor3 = Library.Theme.Main; 
+	Main.ClipsDescendants = true
+	Main.BorderSizePixel = 0 -- BORDURE CLASSIQUE DÉSACTIVÉE
 	
-	-- local MainStroke = Instance.new("UIStroke", Main)
-	-- MainStroke.Name = "MainBorder"
-	-- MainStroke.Color = Color3.fromRGB(120, 90, 255) -- VIOLET FORCÉ (Directement ici)
-	-- MainStroke.Thickness = 0 -- ÉPAISSEUR 3 (Pour que ce soit bien visible)
-	-- MainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	-- Tween(Main, {Size = Size}, 0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+	-- Arrondi des coins uniquement (Pas de UIStroke ici !)
+	Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 6); 
+	
+	-- Animation ouverture
+	Tween(Main, {Size = Size}, 0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
 
-	local Sidebar = Instance.new("Frame", Main); Sidebar.Name = "Sidebar"; Sidebar.Size = UDim2.new(0, 180, 1, 0); Sidebar.BackgroundColor3 = Library.Theme.Sidebar; Sidebar.BorderSizePixel = 0; Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 6)
+    -- Le reste du script continue ici...
+	local Sidebar = Instance.new("Frame", Main);
 	local SidebarFix = Instance.new("Frame", Sidebar); SidebarFix.BorderSizePixel=0; SidebarFix.BackgroundColor3=Library.Theme.Sidebar; SidebarFix.Size=UDim2.new(0,10,1,0); SidebarFix.Position=UDim2.new(1,-10,0,0); SidebarFix.ZIndex=0
 
 	local Title = Instance.new("TextLabel", Sidebar); Title.Size = UDim2.new(1, -20, 0, 50); Title.Position = UDim2.new(0, 20, 0, 10); Title.BackgroundTransparency = 1
