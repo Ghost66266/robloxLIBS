@@ -13,25 +13,7 @@ local Theme = {
 	Text = Color3.fromRGB(255, 255, 255)
 }
 
--- [[ EFFETS OPTIMISÉS ]] --
-local function ApplyNeonGlow(object)
-	local Glow = Instance.new("UIStroke", object)
-	Glow.Color = Theme.Accent
-	Glow.Transparency = 0.6
-	Glow.Thickness = 2
-	
-	task.spawn(function()
-		while object and object.Parent do -- Sécurité anti-crash
-			local tween = TS:Create(Glow, TweenInfo.new(1.5, Enum.EasingStyle.Sine), {Transparency = 0.9})
-			tween:Play()
-			tween.Completed:Wait() -- Attend la fin au lieu d'un wait() classique
-			local tween2 = TS:Create(Glow, TweenInfo.new(1.5, Enum.EasingStyle.Sine), {Transparency = 0.4})
-			tween2:Play()
-			tween2.Completed:Wait()
-		end
-	end)
-end
-
+-- [[ FONCTIONS D'EFFETS ]] --
 local function CreateRipple(obj)
 	local Mouse = game.Players.LocalPlayer:GetMouse()
 	local Circle = Instance.new("ImageLabel", obj)
@@ -43,8 +25,8 @@ local function CreateRipple(obj)
 	Circle.ZIndex = 10
 	Circle.Position = UDim2.new(0, Mouse.X - obj.AbsolutePosition.X, 0, Mouse.Y - obj.AbsolutePosition.Y)
 	Circle.AnchorPoint = Vector2.new(0.5, 0.5)
-	TS:Create(Circle, TweenInfo.new(0.6), {Size = UDim2.new(0, obj.AbsoluteSize.X * 3, 0, obj.AbsoluteSize.X * 3), ImageTransparency = 1}):Play()
-	Debris:AddItem(Circle, 0.7)
+	TS:Create(Circle, TweenInfo.new(0.5), {Size = UDim2.new(0, obj.AbsoluteSize.X * 2.5, 0, obj.AbsoluteSize.X * 2.5), ImageTransparency = 1}):Play()
+	Debris:AddItem(Circle, 0.6)
 end
 
 function Library:CreateWelcomeScreen()
@@ -58,18 +40,15 @@ function Library:CreateWelcomeScreen()
 	TextLabel.RichText = true
 	TextLabel.TextColor3 = Color3.new(1, 1, 1)
 	TextLabel.Font = Enum.Font.GothamBold
-	TextLabel.TextSize = 1 -- Start small
-	TS:Create(TextLabel, TweenInfo.new(1.2, Enum.EasingStyle.Back), {TextSize = 85}):Play()
-	task.delay(4, function()
-		if WelcomeGui then
-			TS:Create(TextLabel, TweenInfo.new(1), {TextTransparency = 1}):Play()
-			Debris:AddItem(WelcomeGui, 1.1)
-		end
+	TextLabel.TextSize = 1
+	TS:Create(TextLabel, TweenInfo.new(1, Enum.EasingStyle.Back), {TextSize = 85}):Play()
+	task.delay(3, function()
+		TS:Create(TextLabel, TweenInfo.new(1), {TextTransparency = 1}):Play()
+		Debris:AddItem(WelcomeGui, 1.1)
 	end)
 end
 
 function Library:CreateWindow(title)
-	-- ANTI-DOUBLON (Évite le crash si on spam execute)
 	if CoreGui:FindFirstChild("8888_UserLib") then CoreGui["8888_UserLib"]:Destroy() end
 
 	local UI = Instance.new("ScreenGui", CoreGui)
@@ -77,32 +56,36 @@ function Library:CreateWindow(title)
 
 	local Main = Instance.new("Frame", UI)
 	Main.Name = "MainFrame"
-	Main.Size = UDim2.new(0, 550, 0, 400)
-	Main.Position = UDim2.new(0.5, -275, 0.5, -200)
+	Main.Size = UDim2.new(0, 500, 0, 350)
+	Main.Position = UDim2.new(0.5, -250, 0.5, -175)
 	Main.BackgroundColor3 = Theme.Main
-	Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
-	ApplyNeonGlow(Main)
+	Main.ClipsDescendants = true
+	Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
+	local Stroke = Instance.new("UIStroke", Main)
+	Stroke.Color = Theme.Outline
+	Stroke.Thickness = 1.5
 
 	local Header = Instance.new("Frame", Main)
 	Header.Name = "Header"
-	Header.Size = UDim2.new(1, 0, 0, 50)
+	Header.Size = UDim2.new(1, 0, 0, 45)
 	Header.BackgroundColor3 = Theme.Section
 	Instance.new("UICorner", Header)
 
 	local TitleLabel = Instance.new("TextLabel", Header)
 	TitleLabel.Size = UDim2.new(1, 0, 1, 0)
-	TitleLabel.Position = UDim2.new(0, 20, 0, 0)
+	TitleLabel.Position = UDim2.new(0, 15, 0, 0)
 	TitleLabel.Text = title or "8.8.8.8"
 	TitleLabel.RichText = true
 	TitleLabel.TextColor3 = Theme.Text
 	TitleLabel.Font = Enum.Font.GothamBold
-	TitleLabel.TextSize = 17
+	TitleLabel.TextSize = 16
 	TitleLabel.BackgroundTransparency = 1
 	TitleLabel.TextXAlignment = "Left"
 
 	local Scroll = Instance.new("ScrollingFrame", Main)
-	Scroll.Size = UDim2.new(1, -20, 1, -75)
-	Scroll.Position = UDim2.new(0, 10, 0, 60)
+	Scroll.Name = "Container"
+	Scroll.Size = UDim2.new(1, -20, 1, -65)
+	Scroll.Position = UDim2.new(0, 10, 0, 55)
 	Scroll.BackgroundTransparency = 1
 	Scroll.ScrollBarThickness = 0
 	Scroll.AutomaticCanvasSize = "Y"
@@ -112,25 +95,22 @@ function Library:CreateWindow(title)
 
 	function WindowActions:AddSection(sTitle)
 		local Section = Instance.new("Frame", Scroll)
-		Section.Size = UDim2.new(0.96, 0, 0, 35)
+		Section.Size = UDim2.new(0.98, 0, 0, 30)
 		Section.AutomaticSize = "Y"
 		Section.BackgroundColor3 = Theme.Section
 		Instance.new("UICorner", Section)
-
-		local Container = Instance.new("Frame", Section)
-		Container.Size = UDim2.new(1, 0, 1, 0)
-		Container.BackgroundTransparency = 1
-		local L = Instance.new("UIListLayout", Container)
-		L.Padding = UDim.new(0, 8)
-		L.HorizontalAlignment = "Center"
-		Instance.new("UIPadding", Container).PaddingTop = UDim.new(0, 10)
-		Instance.new("UIPadding", Container).PaddingBottom = UDim.new(0, 10)
+		
+		local Layout = Instance.new("UIListLayout", Section)
+		Layout.Padding = UDim.new(0, 5)
+		Layout.HorizontalAlignment = "Center"
+		Instance.new("UIPadding", Section).PaddingTop = UDim.new(0, 8)
+		Instance.new("UIPadding", Section).PaddingBottom = UDim.new(0, 8)
 
 		local SectionActions = {}
 
 		function SectionActions:AddButton(text, callback)
-			local Btn = Instance.new("TextButton", Container)
-			Btn.Size = UDim2.new(0.92, 0, 0, 38)
+			local Btn = Instance.new("TextButton", Section)
+			Btn.Size = UDim2.new(0.94, 0, 0, 35)
 			Btn.BackgroundColor3 = Theme.Main
 			Btn.Text = "  " .. text
 			Btn.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -143,26 +123,45 @@ function Library:CreateWindow(title)
 			Btn.MouseButton1Click:Connect(function() CreateRipple(Btn) callback() end)
 		end
 
+		function SectionActions:AddToggle(text, default, callback)
+			local TglFrame = Instance.new("TextButton", Section)
+			TglFrame.Size = UDim2.new(0.94, 0, 0, 35)
+			TglFrame.BackgroundColor3 = Theme.Main
+			TglFrame.Text = "  " .. text
+			TglFrame.TextColor3 = Color3.fromRGB(200, 200, 200)
+			TglFrame.Font = "GothamMedium"
+			TglFrame.TextSize = 14
+			TglFrame.TextXAlignment = "Left"
+			Instance.new("UICorner", TglFrame)
+
+			local Status = Instance.new("Frame", TglFrame)
+			Status.Size = UDim2.new(0, 20, 0, 20)
+			Status.Position = UDim2.new(1, -30, 0.5, -10)
+			Status.BackgroundColor3 = default and Theme.Accent or Theme.Outline
+			Instance.new("UICorner", Status).CornerRadius = UDim.new(1, 0)
+
+			local state = default
+			TglFrame.MouseButton1Click:Connect(function()
+				state = not state
+				TS:Create(Status, TweenInfo.new(0.3), {BackgroundColor3 = state and Theme.Accent or Theme.Outline}):Play()
+				callback(state)
+			end)
+		end
+
 		function SectionActions:AddSlider(text, min, max, default, callback)
-			local SliderFrame = Instance.new("Frame", Container)
-			SliderFrame.Size = UDim2.new(0.92, 0, 0, 50)
-			SliderFrame.BackgroundTransparency = 1
-			local Label = Instance.new("TextLabel", SliderFrame)
+			local SldFrame = Instance.new("Frame", Section)
+			SldFrame.Size = UDim2.new(0.94, 0, 0, 45)
+			SldFrame.BackgroundTransparency = 1
+			local Label = Instance.new("TextLabel", SldFrame)
 			Label.Text = "  " .. text .. " : " .. default
-			Label.Size = UDim2.new(1, 0, 0, 20)
-			Label.TextColor3 = Theme.Text
-			Label.BackgroundTransparency = 1
-			Label.TextXAlignment = "Left"
-			local Bar = Instance.new("Frame", SliderFrame)
-			Bar.Name = "Bar"; Bar.Size = UDim2.new(1, -10, 0, 6); Bar.Position = UDim2.new(0, 5, 0, 30); Bar.BackgroundColor3 = Theme.Outline
-			Instance.new("UICorner", Bar)
+			Label.Size = UDim2.new(1, 0, 0, 20); Label.TextColor3 = Theme.Text; Label.BackgroundTransparency = 1; Label.TextXAlignment = "Left"
+			local Bar = Instance.new("Frame", SldFrame)
+			Bar.Size = UDim2.new(1, -10, 0, 6); Bar.Position = UDim2.new(0, 5, 0, 28); Bar.BackgroundColor3 = Theme.Outline; Instance.new("UICorner", Bar)
 			local Fill = Instance.new("Frame", Bar)
-			Fill.Name = "Fill"; Fill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0); Fill.BackgroundColor3 = Theme.Accent
-			Instance.new("UICorner", Fill)
+			Fill.Size = UDim2.new((default-min)/(max-min), 0, 1, 0); Fill.BackgroundColor3 = Theme.Accent; Instance.new("UICorner", Fill)
 			local function Update()
 				local p = math.clamp((UIS:GetMouseLocation().X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1)
-				Fill.Size = UDim2.new(p, 0, 1, 0)
-				local v = math.floor(min + (max - min) * p)
+				Fill.Size = UDim2.new(p, 0, 1, 0); local v = math.floor(min + (max-min)*p)
 				Label.Text = "  " .. text .. " : " .. v; callback(v)
 			end
 			local s = false
