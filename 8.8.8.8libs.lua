@@ -101,5 +101,43 @@ function Library:CreateWindow(title)
 	end
 	return WindowActions
 end
+function Library:Notify(title, text)
+    local NotifyGui = Instance.new("ScreenGui", CoreGui)
+    local Holder = Instance.new("Frame", NotifyGui)
+    Holder.Size = UDim2.new(0, 250, 0, 80)
+    Holder.Position = UDim2.new(1, 20, 0.8, 0) -- Commence hors écran
+    Holder.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+    Instance.new("UICorner", Holder)
+    Instance.new("UIStroke", Holder).Color = Color3.fromRGB(170, 0, 255)
 
+    local T = Instance.new("TextLabel", Holder)
+    T.Size = UDim2.new(1, -20, 0, 30)
+    T.Position = UDim2.new(0, 10, 0, 5)
+    T.Text = title:upper()
+    T.TextColor3 = Color3.fromRGB(170, 0, 255)
+    T.Font = Enum.Font.GothamBold
+    T.BackgroundTransparency = 1
+    T.TextXAlignment = Enum.TextXAlignment.Left
+
+    local D = Instance.new("TextLabel", Holder)
+    D.Size = UDim2.new(1, -20, 0, 40)
+    D.Position = UDim2.new(0, 10, 0, 30)
+    D.Text = text
+    D.TextColor3 = Color3.new(1,1,1)
+    D.Font = Enum.Font.Gotham
+    D.TextSize = 12
+    D.BackgroundTransparency = 1
+    D.TextWrapped = true
+    D.TextXAlignment = Enum.TextXAlignment.Left
+
+    -- Animation d'entrée (Glissement)
+    Holder:TweenPosition(UDim2.new(1, -270, 0.8, 0), "Out", "Quart", 0.5, true)
+    
+    -- Auto-destruction après 4 secondes
+    task.delay(4, function()
+        Holder:TweenPosition(UDim2.new(1, 20, 0.8, 0), "In", "Quart", 0.5, true)
+        task.wait(0.5)
+        NotifyGui:Destroy()
+    end)
+end
 return Library -- TRÈS IMPORTANT
