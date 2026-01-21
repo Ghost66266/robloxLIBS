@@ -233,6 +233,7 @@ function Library:CreateWindow(Config)
 				Input.TextXAlignment = Enum.TextXAlignment.Left; Input.FocusLost:Connect(function() pcall(Callback, Input.Text) end)
 			end
 			return SecFuncs
+		end
 		return TabFuncs
 	-- [ VERSION V29 : FORCE VISIBLE ] --
 	function WindowFuncs:AddProfile()
