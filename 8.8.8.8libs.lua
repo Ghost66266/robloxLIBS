@@ -19,7 +19,7 @@ Library.Theme = {
 	Accent      = Color3.fromRGB(120, 90, 255),
 	Text        = Color3.fromRGB(240, 240, 240),
 	TextDark    = Color3.fromRGB(140, 140, 150),
-	Outline     = Color3.fromRGB(45, 45, 55),
+	Outline     = Color3.fromRGB(120, 90, 255),
 	Hover       = Color3.fromRGB(35, 35, 40),
 	Dropdown    = Color3.fromRGB(25, 25, 30),
 	
