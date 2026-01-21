@@ -161,7 +161,7 @@ function Library:CreateWindow(Config)
 		TabLabel.TextSize = Library.Theme.TextSize.Tab
 		TabLabel.TextXAlignment = Enum.TextXAlignment.Left
 
-		local Page = Instance.new("ScrollingFrame", Content); Page.Name = Name; Page.Size = UDim2.new(1,0,1,0); Page.BackgroundTransparency = 1; Page.ScrollBarThickness = 2; Page.ScrollBarImageColor3 = Library.Theme.Accent; Page.Visible = false; local PageList = Instance.new("UIListLayout", Page); PageList.Padding = UDim.new(0, 10)
+		local Page = Instance.new("ScrollingFrame", Content); Page.Name = Name; Page.Size = UDim2.new(1,0,1,0); Page.BackgroundTransparency = 1; Page.ScrollBarThickness = 3; Page.ScrollBarImageColor3 = Library.Theme.Accent; Page.Visible = false; local PageList = Instance.new("UIListLayout", Page); PageList.Padding = UDim.new(0, 10)
 		PageList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() Page.CanvasSize = UDim2.new(0,0,0,PageList.AbsoluteContentSize.Y+20) end)
 
 		TabBtn.MouseButton1Click:Connect(function()
