@@ -232,11 +232,7 @@ function Library:CreateWindow(Config)
 				Input.TextSize = Library.Theme.TextSize.Element
 				Input.TextXAlignment = Enum.TextXAlignment.Left; Input.FocusLost:Connect(function() pcall(Callback, Input.Text) end)
 			end
-			return SecFuncs
-		end
-		return TabFuncs
-	end
--- [ VERSION V29 : FORCE VISIBLE ] --
+			-- [ VERSION V29 : FORCE VISIBLE ] --
 	function WindowFuncs:AddProfile()
 		print("DEBUG: Lancement création profil...") -- Vérifie la console F9
 		local Player = Players.LocalPlayer
@@ -308,6 +304,10 @@ function Library:CreateWindow(Config)
 		UserName.ZIndex = 30 -- Supérieur au fond
 		
 		print("DEBUG: Profil créé avec succès.")
+	end
+			return SecFuncs
+		end
+		return TabFuncs
 	end
 	return WindowFuncs
 end
