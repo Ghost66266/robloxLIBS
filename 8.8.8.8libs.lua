@@ -1,81 +1,71 @@
--- [[ 8.8.8.8 UI LIBRARY ]] --
--- [[ VERSION: V17 CLEAN SPACED | AUTHOR: GHOST66266 ]] --
+-- [[ 8.8.8.8 UI LIBRARY - ARCHITECT EDITION ]] --
+-- [[ VERSION: V18 | STRUCTURE: TOPBAR + SIDEBAR + DYNAMIC PAGES ]] --
 
-local InputService = game:GetService("UserInputService")
+local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 local Lighting = game:GetService("Lighting")
 
 local Library = {}
 
--- [ THEME CONFIG ] --
+-- [ CONFIGURATION DU THÈME ] --
 local Theme = {
-	Main        = Color3.fromRGB(25, 25, 25),
-	Sidebar     = Color3.fromRGB(20, 20, 20),
-	Section     = Color3.fromRGB(30, 30, 30),
-	Accent      = Color3.fromRGB(170, 0, 255), -- Violet
+	Main        = Color3.fromRGB(25, 25, 30),       -- Fond Principal
+	Sidebar     = Color3.fromRGB(20, 20, 25),       -- Barre Latérale
+	Topbar      = Color3.fromRGB(18, 18, 22),       -- Barre du Haut
+	Section     = Color3.fromRGB(32, 32, 38),       -- Fond des Sections
+	Accent      = Color3.fromRGB(170, 0, 255),      -- VIOLET FLUO (Signature)
 	Text        = Color3.fromRGB(255, 255, 255),
-	TextDark    = Color3.fromRGB(170, 170, 170),
-	Outline     = Color3.fromRGB(50, 50, 50),
-	ToggleOff   = Color3.fromRGB(40, 40, 40),
+	TextDark    = Color3.fromRGB(160, 160, 170),
+	Outline     = Color3.fromRGB(50, 50, 60),
 	Hover       = Color3.fromRGB(40, 40, 45)
 }
 
 -- [ UTILITAIRES ] --
-local function TweenObj(obj, properties, time)
-	local Info = TweenInfo.new(time or 0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-	TweenService:Create(obj, Info, properties):Play()
+local function Tween(obj, props, time, style, dir)
+	local T = TweenService:Create(obj, TweenInfo.new(time or 0.2, style or Enum.EasingStyle.Quad, dir or Enum.EasingDirection.Out), props)
+	T:Play()
+	return T
 end
 
-local function CreateRipple(obj)
-	if not obj then return end
-	obj.ClipsDescendants = true
+local function CreateRipple(Btn)
+	if not Btn then return end
+	Btn.ClipsDescendants = true
 	task.spawn(function()
 		local Mouse = Players.LocalPlayer:GetMouse()
 		local Ripple = Instance.new("ImageLabel")
-		Ripple.Name = "Ripple"
-		Ripple.Parent = obj
-		Ripple.BackgroundTransparency = 1
-		Ripple.Image = "rbxassetid://266543268"
-		Ripple.ImageColor3 = Theme.Accent
-		Ripple.ImageTransparency = 0.6
-		Ripple.ZIndex = 15
-		
-		local Rx, Ry = Mouse.X - obj.AbsolutePosition.X, Mouse.Y - obj.AbsolutePosition.Y
-		Ripple.Position = UDim2.new(0, Rx, 0, Ry)
-		Ripple.AnchorPoint = Vector2.new(0.5, 0.5)
-		Ripple.Size = UDim2.new(0, 0, 0, 0)
-		
-		local T = TweenService:Create(Ripple, TweenInfo.new(0.6, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-			Size = UDim2.new(0, math.max(obj.AbsoluteSize.X, obj.AbsoluteSize.Y)*3.5, 0, math.max(obj.AbsoluteSize.X, obj.AbsoluteSize.Y)*3.5),
-			ImageTransparency = 1
-		})
+		Ripple.Name = "Ripple"; Ripple.Parent = Btn; Ripple.BackgroundTransparency = 1
+		Ripple.Image = "rbxassetid://266543268"; Ripple.ImageColor3 = Theme.Accent; Ripple.ImageTransparency = 0.6; Ripple.ZIndex = 15
+		local Rx, Ry = Mouse.X - Btn.AbsolutePosition.X, Mouse.Y - Btn.AbsolutePosition.Y
+		Ripple.Position = UDim2.new(0, Rx, 0, Ry); Ripple.AnchorPoint = Vector2.new(0.5, 0.5); Ripple.Size = UDim2.new(0,0,0,0)
+		local T = TweenService:Create(Ripple, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0, math.max(Btn.AbsoluteSize.X, Btn.AbsoluteSize.Y)*3, 0, math.max(Btn.AbsoluteSize.X, Btn.AbsoluteSize.Y)*3), ImageTransparency = 1})
 		T:Play(); T.Completed:Wait(); Ripple:Destroy()
 	end)
 end
 
--- [ ANIMATION CLIC PROPRE ] --
--- Utilise AnchorPoint pour zoomer vers le centre
+-- Effet de clic qui ne casse pas la taille
 local function AddClickEffect(Btn)
 	local Scale = Instance.new("UIScale", Btn)
-	Scale.Scale = 1
-	-- Important : On centre le pivot de l'objet pour qu'il ne se décale pas
 	Btn.AnchorPoint = Vector2.new(0.5, 0.5)
-	-- Note: La position devra être ajustée lors de la création de l'objet pour compenser l'AnchorPoint
+	-- Note: L'utilisateur de la lib n'a pas à gérer ça, c'est auto
 	
-	Btn.MouseButton1Down:Connect(function()
-		TweenObj(Scale, {Scale = 0.96}, 0.1)
-	end)
-	Btn.MouseButton1Up:Connect(function()
-		TweenObj(Scale, {Scale = 1}, 0.1)
-	end)
-	Btn.MouseLeave:Connect(function()
-		TweenObj(Scale, {Scale = 1}, 0.1)
-	end)
+	Btn.MouseButton1Down:Connect(function() Tween(Scale, {Scale = 0.96}, 0.05) end)
+	Btn.MouseButton1Up:Connect(function() Tween(Scale, {Scale = 1}, 0.05) end)
+	Btn.MouseLeave:Connect(function() Tween(Scale, {Scale = 1}, 0.05) end)
 end
 
--- [ INTRO (INTOUCHÉE) ] --
+-- Système de Drag (Déplacement)
+local function MakeDraggable(DragPoint, Main)
+	local Dragging, DragInput, DragStart, StartPos
+	DragPoint.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then Dragging = true; DragStart = input.Position; StartPos = Main.Position end end)
+	DragPoint.InputChanged:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then DragInput = input end end)
+	UserInputService.InputChanged:Connect(function(input) if input == DragInput and Dragging then local Delta = input.Position - DragStart; Main.Position = UDim2.new(StartPos.X.Scale, StartPos.X.Offset + Delta.X, StartPos.Y.Scale, StartPos.Y.Offset + Delta.Y) end end)
+	UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then Dragging = false end end)
+end
+
+-- [ 1. WELCOME SCREEN (INTOUCHABLE) ] --
 function Library:Welcome(TitleText, SubText)
 	for _, v in pairs(CoreGui:GetChildren()) do if v.Name == "8888_Intro" then v:Destroy() end end
 	local Screen = Instance.new("ScreenGui", CoreGui); Screen.Name = "8888_Intro"; Screen.IgnoreGuiInset = true; Screen.DisplayOrder = 10000
@@ -83,161 +73,352 @@ function Library:Welcome(TitleText, SubText)
 	local BackFrame = Instance.new("Frame", Screen); BackFrame.Size = UDim2.new(1,0,1,0); BackFrame.BackgroundColor3 = Color3.fromRGB(10,10,10); BackFrame.BackgroundTransparency = 1; BackFrame.ZIndex = 1
 	local MainLabel = Instance.new("TextLabel", Screen); MainLabel.Size = UDim2.new(1,0,0,150); MainLabel.Position = UDim2.new(0,0,0.4,0); MainLabel.BackgroundTransparency = 1; MainLabel.Text = string.upper(TitleText or "LIBRARY"); MainLabel.TextColor3 = Theme.Accent; MainLabel.Font = Enum.Font.GothamBlack; MainLabel.TextSize = 0; MainLabel.TextTransparency = 1; MainLabel.ZIndex = 2
 	local SubLabel = Instance.new("TextLabel", Screen); SubLabel.Size = UDim2.new(1,0,0,50); SubLabel.Position = UDim2.new(0,0,0.55,0); SubLabel.BackgroundTransparency = 1; SubLabel.Text = string.upper(SubText or "INITIALIZING..."); SubLabel.TextColor3 = Theme.Text; SubLabel.Font = Enum.Font.GothamBold; SubLabel.TextSize = 20; SubLabel.TextTransparency = 1; SubLabel.ZIndex = 2
+
 	task.spawn(function()
-		TweenObj(Blur, {Size = 24}, 1); TweenObj(BackFrame, {BackgroundTransparency = 0.1}, 0.5); task.wait(0.5)
+		Tween(Blur, {Size = 24}, 1); Tween(BackFrame, {BackgroundTransparency = 0.1}, 0.5); task.wait(0.5)
 		local T1 = TweenService:Create(MainLabel, TweenInfo.new(0.8, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {TextSize = 90, TextTransparency = 0}); T1:Play(); task.wait(0.3)
 		SubLabel.Position = UDim2.new(0,0,0.60,0); local T2 = TweenService:Create(SubLabel, TweenInfo.new(0.8, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2.new(0,0,0.55,0), TextTransparency = 0}); T2:Play(); task.wait(2.5)
-		TweenObj(MainLabel, {TextSize = 0, TextTransparency = 1}, 0.5); TweenObj(SubLabel, {TextTransparency = 1}, 0.5); task.wait(0.2)
-		TweenObj(BackFrame, {BackgroundTransparency = 1}, 0.5); TweenObj(Blur, {Size = 0}, 0.8); task.wait(0.8); Screen:Destroy(); Blur:Destroy()
+		Tween(MainLabel, {TextSize = 0, TextTransparency = 1}, 0.5); Tween(SubLabel, {TextTransparency = 1}, 0.5); task.wait(0.2)
+		Tween(BackFrame, {BackgroundTransparency = 1}, 0.5); Tween(Blur, {Size = 0}, 0.8); task.wait(0.8); Screen:Destroy(); Blur:Destroy()
 	end)
 end
 
--- [ FENÊTRE PRINCIPALE ] --
+-- [ 2. FENÊTRE PRINCIPALE ] --
 function Library:CreateWindow(Config)
-	local UI_Name = Config.Name or "Library"
+	local UI_Name = Config.Name or "UI"
 	if CoreGui:FindFirstChild(UI_Name) then CoreGui[UI_Name]:Destroy() end
-	local ScreenGui = Instance.new("ScreenGui", CoreGui); ScreenGui.Name = UI_Name; ScreenGui.DisplayOrder = 100; ScreenGui.ResetOnSpawn = false
-	
-	-- Main Frame
-	local MainFrame = Instance.new("Frame", ScreenGui); MainFrame.Name = "MainFrame"; MainFrame.Size = UDim2.new(0, 750, 0, 520); MainFrame.Position = UDim2.new(0.5, -375, 0.5, -260); MainFrame.BackgroundColor3 = Theme.Main; MainFrame.ClipsDescendants = true
-	Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 8); local MainStroke = Instance.new("UIStroke", MainFrame); MainStroke.Color = Theme.Outline; MainStroke.Thickness = 1
-	
-	-- Sidebar
-	local Sidebar = Instance.new("Frame", MainFrame); Sidebar.Name = "Sidebar"; Sidebar.Size = UDim2.new(0, 200, 1, 0); Sidebar.BackgroundColor3 = Theme.Sidebar; Sidebar.BorderSizePixel = 0
-	local TitleLabel = Instance.new("TextLabel", Sidebar); TitleLabel.Size = UDim2.new(1, -25, 0, 70); TitleLabel.Position = UDim2.new(0, 25, 0, 0); TitleLabel.BackgroundTransparency = 1; TitleLabel.Text = string.upper(UI_Name); TitleLabel.Font = Enum.Font.GothamBlack; TitleLabel.TextSize = 24; TitleLabel.TextColor3 = Theme.Text; TitleLabel.TextXAlignment = "Left"
-	local TabContainer = Instance.new("ScrollingFrame", Sidebar); TabContainer.Size = UDim2.new(1, 0, 1, -80); TabContainer.Position = UDim2.new(0, 0, 0, 80); TabContainer.BackgroundTransparency = 1; TabContainer.ScrollBarThickness = 0
-	Instance.new("UIListLayout", TabContainer).Padding = UDim.new(0, 5)
-	
-	-- Page Container (Zone de droite)
-	local PageContainer = Instance.new("Frame", MainFrame); PageContainer.Name = "Pages"; PageContainer.Size = UDim2.new(1, -200, 1, 0); PageContainer.Position = UDim2.new(0, 200, 0, 0); PageContainer.BackgroundTransparency = 1
-	
-	-- [ FIX ESPACEMENT ] Padding global pour éviter de coller aux bords
-	local PageContainerPadding = Instance.new("UIPadding", PageContainer)
-	PageContainerPadding.PaddingTop = UDim.new(0, 20)
-	PageContainerPadding.PaddingLeft = UDim.new(0, 20)
-	PageContainerPadding.PaddingRight = UDim.new(0, 20)
-	PageContainerPadding.PaddingBottom = UDim.new(0, 20)
 
-	-- Drag Logic
-	local dragging, dragInput, dragStart, startPos
-	Sidebar.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging=true; dragStart=i.Position; startPos=MainFrame.Position end end)
-	Sidebar.InputChanged:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseMovement then dragInput=i end end)
-	InputService.InputChanged:Connect(function(i) if i==dragInput and dragging then local d=i.Position-dragStart; MainFrame.Position=UDim2.new(startPos.X.Scale, startPos.X.Offset+d.X, startPos.Y.Scale, startPos.Y.Offset+d.Y) end end)
-	InputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging=false end end)
-	InputService.InputBegan:Connect(function(i,g) if not g and i.KeyCode==Enum.KeyCode.Insert then MainFrame.Visible=not MainFrame.Visible end end)
+	local ScreenGui = Instance.new("ScreenGui", CoreGui)
+	ScreenGui.Name = UI_Name
+	ScreenGui.DisplayOrder = 100
+	ScreenGui.ResetOnSpawn = false
 
-	local WinActions = {}
+	-- MAIN FRAME
+	local MainFrame = Instance.new("Frame", ScreenGui)
+	MainFrame.Name = "MainFrame"
+	MainFrame.Size = UDim2.new(0, 750, 0, 500)
+	MainFrame.Position = UDim2.new(0.5, -375, 0.5, -250)
+	MainFrame.BackgroundColor3 = Theme.Main
+	MainFrame.ClipsDescendants = true
+	Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 8)
+	Instance.new("UIStroke", MainFrame).Color = Theme.Outline
+
+	-- TOPBAR (Contient le Titre et le Crédit)
+	local TopBar = Instance.new("Frame", MainFrame)
+	TopBar.Name = "TopBar"
+	TopBar.Size = UDim2.new(1, 0, 0, 40)
+	TopBar.BackgroundColor3 = Theme.Topbar
+	TopBar.BorderSizePixel = 0
+	
+	local TopBarTitle = Instance.new("TextLabel", TopBar)
+	TopBarTitle.Size = UDim2.new(0, 200, 1, 0)
+	TopBarTitle.Position = UDim2.new(0, 15, 0, 0)
+	TopBarTitle.BackgroundTransparency = 1
+	TopBarTitle.Text = string.upper(Config.Name)
+	TopBarTitle.TextColor3 = Theme.Text
+	TopBarTitle.Font = Enum.Font.GothamBlack
+	TopBarTitle.TextSize = 16
+	TopBarTitle.TextXAlignment = Enum.TextXAlignment.Left
+
+	local CreditLabel = Instance.new("TextLabel", TopBar)
+	CreditLabel.Size = UDim2.new(0, 100, 1, 0)
+	CreditLabel.AnchorPoint = Vector2.new(1, 0)
+	CreditLabel.Position = UDim2.new(1, -15, 0, 0)
+	CreditLabel.BackgroundTransparency = 1
+	CreditLabel.Text = "BY <font color='#AA00FF'>8.8.8.8</font>"
+	CreditLabel.RichText = true
+	CreditLabel.TextColor3 = Theme.TextDark
+	CreditLabel.Font = Enum.Font.GothamBold
+	CreditLabel.TextSize = 12
+	CreditLabel.TextXAlignment = Enum.TextXAlignment.Right
+
+	-- Separateur sous la TopBar
+	local Sep = Instance.new("Frame", TopBar)
+	Sep.Size = UDim2.new(1, 0, 0, 1)
+	Sep.Position = UDim2.new(0, 0, 1, 0)
+	Sep.BackgroundColor3 = Theme.Outline
+	Sep.BorderSizePixel = 0
+
+	-- SIDEBAR (Menu de gauche)
+	local Sidebar = Instance.new("Frame", MainFrame)
+	Sidebar.Name = "Sidebar"
+	Sidebar.Size = UDim2.new(0, 180, 1, -41)
+	Sidebar.Position = UDim2.new(0, 0, 0, 41)
+	Sidebar.BackgroundColor3 = Theme.Sidebar
+	Sidebar.BorderSizePixel = 0
+
+	local TabContainer = Instance.new("ScrollingFrame", Sidebar)
+	TabContainer.Size = UDim2.new(1, 0, 1, -20)
+	TabContainer.Position = UDim2.new(0, 0, 0, 10)
+	TabContainer.BackgroundTransparency = 1
+	TabContainer.ScrollBarThickness = 0
+	
+	local TabList = Instance.new("UIListLayout", TabContainer)
+	TabList.SortOrder = Enum.SortOrder.LayoutOrder
+	TabList.Padding = UDim.new(0, 5)
+
+	-- CONTENEUR DE PAGES (Droite)
+	local PageContainer = Instance.new("Frame", MainFrame)
+	PageContainer.Name = "Pages"
+	PageContainer.Size = UDim2.new(1, -180, 1, -41)
+	PageContainer.Position = UDim2.new(0, 180, 0, 41)
+	PageContainer.BackgroundTransparency = 1
+	
+	-- Padding global des pages pour ne pas coller aux bords
+	local PagePad = Instance.new("UIPadding", PageContainer)
+	PagePad.PaddingTop = UDim.new(0, 15)
+	PagePad.PaddingLeft = UDim.new(0, 15)
+	PagePad.PaddingRight = UDim.new(0, 15)
+	PagePad.PaddingBottom = UDim.new(0, 15)
+
+	MakeDraggable(TopBar, MainFrame)
+	
+	-- Touche Insert
+	UserInputService.InputBegan:Connect(function(i, g)
+		if not g and i.KeyCode == Enum.KeyCode.Insert then
+			MainFrame.Visible = not MainFrame.Visible
+		end
+	end)
+
+	local WindowActions = {}
 	local FirstTab = true
 
-	function WinActions:AddTab(TabName)
-		local TabButton = Instance.new("TextButton", TabContainer)
-		TabButton.Size = UDim2.new(1, 0, 0, 42); TabButton.BackgroundTransparency = 1; TabButton.Text = ""; TabButton.AutoButtonColor = false
+	-- [ AJOUTER UN ONGLET ] --
+	function WindowActions:AddTab(Name, IconId)
+		local TabBtn = Instance.new("TextButton", TabContainer)
+		TabBtn.Size = UDim2.new(1, 0, 0, 40)
+		TabBtn.BackgroundTransparency = 1
+		TabButton = TabBtn -- reference
+		TabBtn.Text = ""
 		
-		local ActiveBar = Instance.new("Frame", TabButton); ActiveBar.Size = UDim2.new(0, 4, 0.6, 0); ActiveBar.Position = UDim2.new(0, 0, 0.2, 0); ActiveBar.BackgroundColor3 = Theme.Accent; ActiveBar.Transparency = 1; ActiveBar.BorderSizePixel = 0
-		local Label = Instance.new("TextLabel", TabButton); Label.Size = UDim2.new(1, -30, 1, 0); Label.Position = UDim2.new(0, 30, 0, 0); Label.BackgroundTransparency = 1; Label.Text = TabName; Label.Font = Enum.Font.GothamBold; Label.TextSize = 13; Label.TextColor3 = Theme.TextDark; Label.TextXAlignment = "Left"
+		-- Ligne active
+		local ActiveLine = Instance.new("Frame", TabBtn)
+		ActiveLine.Size = UDim2.new(0, 3, 0.7, 0)
+		ActiveLine.Position = UDim2.new(0, 0, 0.15, 0)
+		ActiveLine.BackgroundColor3 = Theme.Accent
+		ActiveLine.Transparency = 1
 		
-		local Page = Instance.new("ScrollingFrame", PageContainer); Page.Name = TabName.."_Page"; Page.Size = UDim2.new(1, 0, 1, 0); Page.BackgroundTransparency = 1; Page.ScrollBarThickness = 0; Page.Visible = false
+		-- Texte
+		local TabLabel = Instance.new("TextLabel", TabBtn)
+		TabLabel.Size = UDim2.new(1, -35, 1, 0)
+		TabLabel.Position = UDim2.new(0, 35, 0, 0)
+		TabLabel.BackgroundTransparency = 1
+		TabLabel.Text = Name
+		TabLabel.TextColor3 = Theme.TextDark
+		TabLabel.Font = Enum.Font.GothamMedium
+		TabLabel.TextSize = 13
+		TabLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+		-- Icône (optionnelle)
+		if IconId then
+			local Icon = Instance.new("ImageLabel", TabBtn)
+			Icon.Size = UDim2.new(0, 20, 0, 20)
+			Icon.Position = UDim2.new(0, 10, 0.5, -10)
+			Icon.BackgroundTransparency = 1
+			Icon.Image = "rbxassetid://"..tostring(IconId)
+			Icon.ImageColor3 = Theme.TextDark
+			TabLabel.Position = UDim2.new(0, 40, 0, 0)
+		end
+
+		-- La Page
+		local Page = Instance.new("Frame", PageContainer)
+		Page.Name = Name.."_Page"
+		Page.Size = UDim2.new(1, 0, 1, 0)
+		Page.BackgroundTransparency = 1
+		Page.Visible = false
 		
-		-- Grid Layout pour 2 colonnes espacées
-		local Grid = Instance.new("UIGridLayout", Page); Grid.SortOrder = "LayoutOrder"; Grid.CellPadding = UDim2.new(0, 15, 0, 15); Grid.CellSize = UDim2.new(0.485, 0, 0, 0)
-		
-		TabButton.MouseButton1Click:Connect(function()
-			for _, b in pairs(TabContainer:GetChildren()) do if b:IsA("TextButton") then TweenObj(b.TextLabel, {TextColor3 = Theme.TextDark}); TweenObj(b.Frame, {Transparency = 1}) end end
+		-- 2 Colonnes pour les sections
+		local Grid = Instance.new("UIGridLayout", Page)
+		Grid.SortOrder = Enum.SortOrder.LayoutOrder
+		Grid.CellPadding = UDim2.new(0, 15, 0, 15)
+		Grid.CellSize = UDim2.new(0.485, 0, 0, 0) -- Sera override par le script si Scrolling
+
+		TabBtn.MouseButton1Click:Connect(function()
+			for _, b in pairs(TabContainer:GetChildren()) do
+				if b:IsA("TextButton") then
+					Tween(b.TextLabel, {TextColor3 = Theme.TextDark})
+					Tween(b.Frame, {Transparency = 1})
+					if b:FindFirstChild("ImageLabel") then Tween(b.ImageLabel, {ImageColor3 = Theme.TextDark}) end
+				end
+			end
 			for _, p in pairs(PageContainer:GetChildren()) do p.Visible = false end
-			Page.Visible = true; TweenObj(Label, {TextColor3 = Theme.Text}); TweenObj(ActiveBar, {Transparency = 0})
+			
+			Page.Visible = true
+			Tween(TabLabel, {TextColor3 = Theme.Text})
+			Tween(ActiveLine, {Transparency = 0})
+			if TabBtn:FindFirstChild("ImageLabel") then Tween(TabBtn.ImageLabel, {ImageColor3 = Theme.Text}) end
 		end)
-		if FirstTab then Page.Visible = true; Label.TextColor3 = Theme.Text; ActiveBar.Transparency = 0; FirstTab = false end
 		
-		local TabActs = {}
-		function TabActs:AddSection(SecName)
-			local Section = Instance.new("Frame", Page); Section.BackgroundColor3 = Theme.Section; Section.Size = UDim2.new(0.485, 0, 0, 100); Instance.new("UICorner", Section).CornerRadius = UDim.new(0, 6)
+		if FirstTab then
+			Page.Visible = true; TabLabel.TextColor3 = Theme.Text; ActiveLine.Transparency = 0
+			if TabBtn:FindFirstChild("ImageLabel") then TabBtn.ImageLabel.ImageColor3 = Theme.Text end
+			FirstTab = false
+		end
+
+		local TabActions = {}
+
+		-- [ AJOUTER UNE SECTION (Frame ou ScrollingFrame) ] --
+		function TabActions:AddSection(SecName, Type)
+			local Section = Instance.new("Frame", Page)
+			Section.Name = SecName
+			Section.BackgroundColor3 = Theme.Section
+			Section.Size = UDim2.new(0.485, 0, 0, 100)
+			Instance.new("UICorner", Section).CornerRadius = UDim.new(0, 6)
 			
-			local Title = Instance.new("TextLabel", Section); Title.Size = UDim2.new(1, -20, 0, 40); Title.Position = UDim2.new(0, 15, 0, 0); Title.BackgroundTransparency = 1; Title.Text = SecName; Title.Font = "GothamBold"; Title.TextSize = 13; Title.TextColor3 = Theme.Text; Title.TextXAlignment = "Left"
-			local Div = Instance.new("Frame", Section); Div.Size = UDim2.new(1, 0, 0, 1); Div.Position = UDim2.new(0, 0, 0, 40); Div.BackgroundColor3 = Theme.Outline; Div.BorderSizePixel = 0
-			local Container = Instance.new("Frame", Section); Container.Size = UDim2.new(1, 0, 1, -45); Container.Position = UDim2.new(0, 0, 0, 45); Container.BackgroundTransparency = 1
+			local Title = Instance.new("TextLabel", Section)
+			Title.Size = UDim2.new(1, -20, 0, 35)
+			Title.Position = UDim2.new(0, 15, 0, 0)
+			Title.BackgroundTransparency = 1
+			Title.Text = SecName
+			Title.Font = Enum.Font.GothamBold
+			Title.TextSize = 13
+			Title.TextColor3 = Theme.Text
+			Title.TextXAlignment = Enum.TextXAlignment.Left
 			
-			-- [ FIX ] Padding Interne Section
-			local SecPad = Instance.new("UIPadding", Container); SecPad.PaddingTop = UDim.new(0, 10); SecPad.PaddingBottom = UDim.new(0, 10); SecPad.PaddingLeft = UDim.new(0, 10); SecPad.PaddingRight = UDim.new(0, 10)
+			local Line = Instance.new("Frame", Section)
+			Line.Size = UDim2.new(1, 0, 0, 1)
+			Line.Position = UDim2.new(0, 0, 0, 35)
+			Line.BackgroundColor3 = Theme.Outline
+			Line.BorderSizePixel = 0
 			
-			local List = Instance.new("UIListLayout", Container); List.SortOrder = "LayoutOrder"; List.Padding = UDim.new(0, 6)
+			-- Choix du type de conteneur
+			local Container
+			if Type == "Scroll" then
+				Container = Instance.new("ScrollingFrame", Section)
+				Container.ScrollBarThickness = 2
+				Container.ScrollBarImageColor3 = Theme.Accent
+			else
+				Container = Instance.new("Frame", Section)
+			end
 			
-			List:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() 
-				Section.Size = UDim2.new(0.485, 0, 0, List.AbsoluteContentSize.Y + 65)
-				local MaxH = 0; for _, c in pairs(Page:GetChildren()) do if c:IsA("Frame") then local Y = c.AbsolutePosition.Y + c.AbsoluteSize.Y - Page.AbsolutePosition.Y; if Y > MaxH then MaxH = Y end end end; Page.CanvasSize = UDim2.new(0, 0, 0, MaxH + 20) 
+			Container.Name = "Container"
+			Container.Size = UDim2.new(1, 0, 1, -40)
+			Container.Position = UDim2.new(0, 0, 0, 40)
+			Container.BackgroundTransparency = 1
+			
+			-- Padding interne à la section
+			local Pad = Instance.new("UIPadding", Container)
+			Pad.PaddingTop = UDim.new(0, 5)
+			Pad.PaddingLeft = UDim.new(0, 10)
+			Pad.PaddingRight = UDim.new(0, 10)
+			Pad.PaddingBottom = UDim.new(0, 5)
+			
+			local List = Instance.new("UIListLayout", Container)
+			List.SortOrder = Enum.SortOrder.LayoutOrder
+			List.Padding = UDim.new(0, 6)
+			
+			-- Auto-Resize Logic
+			List:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+				if Type == "Scroll" then
+					Container.CanvasSize = UDim2.new(0, 0, 0, List.AbsoluteContentSize.Y + 10)
+					-- Pour une section Scroll, on peut fixer une hauteur max
+					Section.Size = UDim2.new(0.485, 0, 0, 250) 
+				else
+					-- Frame classique qui s'agrandit
+					Section.Size = UDim2.new(0.485, 0, 0, List.AbsoluteContentSize.Y + 50)
+				end
 			end)
 
-			local SecActs = {}
+			local SecActions = {}
 
-			-- BUTTON
-			function SecActs:AddButton(Text, Callback)
-				local Btn = Instance.new("TextButton", Container); Btn.Size = UDim2.new(1, 0, 0, 32); Btn.BackgroundColor3 = Theme.Main; Btn.Text = Text; Btn.TextColor3 = Theme.Text; Btn.Font = "GothamBold"; Btn.TextSize = 12; Btn.AutoButtonColor = false; Btn.ClipsDescendants = false -- Important pour UIScale
-				Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 4); Instance.new("UIStroke", Btn).Color = Theme.Outline
+			function SecActions:AddButton(Text, Callback)
+				local Btn = Instance.new("TextButton", Container)
+				Btn.Size = UDim2.new(1, 0, 0, 30)
+				Btn.BackgroundColor3 = Theme.Main
+				Btn.Text = Text
+				Btn.TextColor3 = Theme.Text
+				Btn.Font = Enum.Font.GothamBold
+				Btn.TextSize = 12
+				Btn.AutoButtonColor = false
+				
+				Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 4)
+				Instance.new("UIStroke", Btn).Color = Theme.Outline
+				
+				-- On compense le AnchorPoint du AddClickEffect
+				Btn.Position = UDim2.new(0.5, 0, 0, 0)
 				
 				AddClickEffect(Btn)
 				
-				Btn.MouseEnter:Connect(function() TweenObj(Btn, {BackgroundColor3 = Theme.Hover}) end)
-				Btn.MouseLeave:Connect(function() TweenObj(Btn, {BackgroundColor3 = Theme.Main}) end)
+				Btn.MouseEnter:Connect(function() Tween(Btn, {BackgroundColor3 = Theme.Hover}) end)
+				Btn.MouseLeave:Connect(function() Tween(Btn, {BackgroundColor3 = Theme.Main}) end)
 				Btn.MouseButton1Click:Connect(function() CreateRipple(Btn); pcall(Callback) end)
 			end
-			
-			-- LABEL
-			function SecActs:AddLabel(Text)
-				local Lab = Instance.new("TextLabel", Container); Lab.Size = UDim2.new(1, 0, 0, 20); Lab.BackgroundTransparency = 1; Lab.Text = Text; Lab.TextColor3 = Theme.TextDark; Lab.Font = "Gotham"; Lab.TextSize = 11; Lab.TextXAlignment = "Left"
-			end
 
-			-- TOGGLE
-			function SecActs:AddToggle(Text, Default, Callback)
-				local Tgl = Instance.new("TextButton", Container); Tgl.Size = UDim2.new(1, 0, 0, 30); Tgl.BackgroundTransparency = 1; Tgl.Text = ""; Tgl.AutoButtonColor = false
-				local Lab = Instance.new("TextLabel", Tgl); Lab.Size = UDim2.new(1, -45, 1, 0); Lab.BackgroundTransparency = 1; Lab.Text = Text; Lab.TextColor3 = Theme.TextDark; Lab.Font = "GothamMedium"; Lab.TextSize = 12; Lab.TextXAlignment = "Left"
-				local Bg = Instance.new("Frame", Tgl); Bg.Size = UDim2.new(0, 36, 0, 18); Bg.Position = UDim2.new(1, -36, 0.5, -9); Bg.BackgroundColor3 = Default and Theme.Accent or Theme.ToggleOff; Instance.new("UICorner", Bg).CornerRadius = UDim.new(1, 0)
-				local Dot = Instance.new("Frame", Bg); Dot.Size = UDim2.new(0, 14, 0, 14); Dot.Position = Default and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7); Dot.BackgroundColor3 = Color3.new(1,1,1); Instance.new("UICorner", Dot).CornerRadius = UDim.new(1, 0)
+			function SecActions:AddToggle(Text, Default, Callback)
+				local Tgl = Instance.new("TextButton", Container)
+				Tgl.Size = UDim2.new(1, 0, 0, 28)
+				Tgl.BackgroundTransparency = 1
+				Tgl.Text = ""
+				Tgl.AutoButtonColor = false
 				
+				-- On compense le AnchorPoint
+				Tgl.Position = UDim2.new(0.5, 0, 0, 0)
 				AddClickEffect(Tgl)
 
-				local State = Default; Tgl.MouseButton1Click:Connect(function() State = not State; TweenObj(Bg, {BackgroundColor3 = State and Theme.Accent or Theme.ToggleOff}); TweenObj(Dot, {Position = State and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7)}); TweenObj(Lab, {TextColor3 = State and Theme.Text or Theme.TextDark}); pcall(Callback, State) end)
+				local Lab = Instance.new("TextLabel", Tgl)
+				Lab.Size = UDim2.new(1, -45, 1, 0)
+				Lab.BackgroundTransparency = 1
+				Lab.Text = Text
+				Lab.TextColor3 = Theme.TextDark
+				Lab.Font = Enum.Font.GothamMedium
+				Lab.TextSize = 12
+				Lab.TextXAlignment = Enum.TextXAlignment.Left
+				
+				local Bg = Instance.new("Frame", Tgl)
+				Bg.Size = UDim2.new(0, 34, 0, 18)
+				Bg.Position = UDim2.new(1, -34, 0.5, -9)
+				Bg.BackgroundColor3 = Default and Theme.Accent or Theme.ToggleOff
+				Instance.new("UICorner", Bg).CornerRadius = UDim.new(1, 0)
+				
+				local Dot = Instance.new("Frame", Bg)
+				Dot.Size = UDim2.new(0, 14, 0, 14)
+				Dot.Position = Default and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7)
+				Dot.BackgroundColor3 = Color3.new(1,1,1)
+				Instance.new("UICorner", Dot).CornerRadius = UDim.new(1, 0)
+				
+				local State = Default
+				Tgl.MouseButton1Click:Connect(function()
+					State = not State
+					Tween(Bg, {BackgroundColor3 = State and Theme.Accent or Theme.ToggleOff})
+					Tween(Dot, {Position = State and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7)})
+					Tween(Lab, {TextColor3 = State and Theme.Text or Theme.TextDark})
+					pcall(Callback, State)
+				end)
 			end
 
-			-- SLIDER
-			function SecActs:AddSlider(Text, Min, Max, Default, Callback)
-				local Sld = Instance.new("Frame", Container); Sld.Size = UDim2.new(1, 0, 0, 45); Sld.BackgroundTransparency = 1
-				local Title = Instance.new("TextLabel", Sld); Title.Size = UDim2.new(1, 0, 0, 20); Title.BackgroundTransparency = 1; Title.Text = Text; Title.TextColor3 = Theme.TextDark; Title.Font = "GothamMedium"; Title.TextSize = 12; Title.TextXAlignment = "Left"
-				local Val = Instance.new("TextLabel", Sld); Val.Size = UDim2.new(1, 0, 0, 20); Val.BackgroundTransparency = 1; Val.Text = tostring(Default); Val.TextColor3 = Theme.Text; Val.Font = "GothamBold"; Val.TextSize = 12; Val.TextXAlignment = "Right"
-				local Bar = Instance.new("Frame", Sld); Bar.Size = UDim2.new(1, 0, 0, 4); Bar.Position = UDim2.new(0, 0, 0, 30); Bar.BackgroundColor3 = Theme.Outline; Instance.new("UICorner", Bar).CornerRadius = UDim.new(1, 0)
-				local Fill = Instance.new("Frame", Bar); Fill.Size = UDim2.new((Default - Min) / (Max - Min), 0, 1, 0); Fill.BackgroundColor3 = Theme.Accent; Instance.new("UICorner", Fill).CornerRadius = UDim.new(1, 0)
-				local Active = false; local function Update(Input) local Size = math.clamp((Input.Position.X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1); local Value = math.floor(Min + ((Max - Min) * Size)); TweenObj(Fill, {Size = UDim2.new(Size, 0, 1, 0)}, 0.05); Val.Text = tostring(Value); pcall(Callback, Value) end
-				Bar.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then Active = true; Update(i) end end); InputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then Active = false end end); InputService.InputChanged:Connect(function(i) if Active and i.UserInputType == Enum.UserInputType.MouseMovement then Update(i) end end)
+			function SecActions:AddSlider(Text, Min, Max, Default, Callback)
+				local Sld = Instance.new("Frame", Container)
+				Sld.Size = UDim2.new(1, 0, 0, 45)
+				Sld.BackgroundTransparency = 1
+				
+				local Title = Instance.new("TextLabel", Sld)
+				Title.Size = UDim2.new(1, 0, 0, 20)
+				Title.BackgroundTransparency = 1; Title.Text = Text; Title.TextColor3 = Theme.TextDark; Title.Font = "GothamMedium"; Title.TextSize = 12; Title.TextXAlignment = "Left"
+				local Val = Instance.new("TextLabel", Sld)
+				Val.Size = UDim2.new(1, 0, 0, 20); Val.BackgroundTransparency = 1; Val.Text = tostring(Default); Val.TextColor3 = Theme.Text; Val.Font = "GothamBold"; Val.TextSize = 12; Val.TextXAlignment = "Right"
+				
+				local Bar = Instance.new("Frame", Sld)
+				Bar.Size = UDim2.new(1, 0, 0, 4); Bar.Position = UDim2.new(0, 0, 0, 30); Bar.BackgroundColor3 = Theme.Outline; Instance.new("UICorner", Bar).CornerRadius = UDim.new(1, 0)
+				local Fill = Instance.new("Frame", Bar)
+				Fill.Size = UDim2.new((Default-Min)/(Max-Min), 0, 1, 0); Fill.BackgroundColor3 = Theme.Accent; Instance.new("UICorner", Fill).CornerRadius = UDim.new(1, 0)
+				
+				local Active=false
+				local function Update(Input)
+					local Size = math.clamp((Input.Position.X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1)
+					local Value = math.floor(Min + ((Max - Min) * Size))
+					Tween(Fill, {Size = UDim2.new(Size, 0, 1, 0)}, 0.05)
+					Val.Text = tostring(Value); pcall(Callback, Value)
+				end
+				Bar.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then Active=true; Update(i) end end)
+				UserInputService.InputEnded:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then Active=false end end)
+				UserInputService.InputChanged:Connect(function(i) if Active and i.UserInputType==Enum.UserInputType.MouseMovement then Update(i) end end)
 			end
 			
-			-- DROPDOWN
-			function SecActs:AddDropdown(Text, Items, Default, Callback)
-				local Dropdown = Instance.new("Frame", Container); Dropdown.Size = UDim2.new(1, 0, 0, 32); Dropdown.BackgroundTransparency = 1; Dropdown.ClipsDescendants = false
-				local Button = Instance.new("TextButton", Dropdown); Button.Size = UDim2.new(1, 0, 0, 32); Button.BackgroundColor3 = Theme.Main; Button.Text = ""; Button.AutoButtonColor = false; Instance.new("UICorner", Button).CornerRadius = UDim.new(0, 4); Instance.new("UIStroke", Button).Color = Theme.Outline
-				
-				AddClickEffect(Button)
-
-				local Label = Instance.new("TextLabel", Button); Label.Size = UDim2.new(1, -30, 1, 0); Label.Position = UDim2.new(0, 10, 0, 0); Label.BackgroundTransparency = 1; Label.Text = Text .. ": " .. (Default or "None"); Label.TextColor3 = Theme.TextDark; Label.Font = Enum.Font.GothamMedium; Label.TextSize = 12; Label.TextXAlignment = "Left"
-				local Icon = Instance.new("ImageLabel", Button); Icon.Size = UDim2.new(0, 20, 0, 20); Icon.Position = UDim2.new(1, -25, 0.5, -10); Icon.BackgroundTransparency = 1; Icon.Image = "rbxassetid://6031091004"; Icon.ImageColor3 = Theme.TextDark
-				
-				local ListFrame = Instance.new("ScrollingFrame", Dropdown); ListFrame.Size = UDim2.new(1, 0, 0, 0); ListFrame.Position = UDim2.new(0, 0, 0, 35); ListFrame.BackgroundColor3 = Theme.Section; ListFrame.BorderSizePixel = 0; ListFrame.ScrollBarThickness = 2; ListFrame.Visible = false; ListFrame.ZIndex = 10; Instance.new("UICorner", ListFrame).CornerRadius = UDim.new(0, 4); instance_stroke = Instance.new("UIStroke", ListFrame); instance_stroke.Color = Theme.Outline; instance_stroke.Thickness = 1
-				local ListLayout = Instance.new("UIListLayout", ListFrame); ListLayout.SortOrder = "LayoutOrder"; ListLayout.Padding = UDim.new(0, 2)
-				local ListPad = Instance.new("UIPadding", ListFrame); ListPad.PaddingTop = UDim.new(0,5); ListPad.PaddingLeft = UDim.new(0,5); ListPad.PaddingRight = UDim.new(0,5); ListPad.PaddingBottom = UDim.new(0,5)
-
-				local Open = false; local ItemHeight = 25
-				local function Update()
-					for _, c in pairs(ListFrame:GetChildren()) do if c:IsA("TextButton") then c:Destroy() end end
-					for _, Itm in pairs(Items) do
-						local ItmBtn = Instance.new("TextButton", ListFrame); ItmBtn.Size = UDim2.new(1, 0, 0, ItemHeight); ItmBtn.BackgroundColor3 = Theme.Main; ItmBtn.Text = "  " .. Itm; ItmBtn.TextColor3 = Theme.TextDark; ItmBtn.Font = "Gotham"; ItmBtn.TextSize = 12; ItmBtn.TextXAlignment = "Left"; ItmBtn.AutoButtonColor = false; ItmBtn.ZIndex = 11; Instance.new("UICorner", ItmBtn).CornerRadius = UDim.new(0, 3)
-						ItmBtn.MouseEnter:Connect(function() ItmBtn.BackgroundColor3 = Theme.Hover; ItmBtn.TextColor3 = Theme.Text end); ItmBtn.MouseLeave:Connect(function() ItmBtn.BackgroundColor3 = Theme.Main; ItmBtn.TextColor3 = Theme.TextDark end)
-						ItmBtn.MouseButton1Click:Connect(function() Open = false; Label.Text = Text .. ": " .. Itm; TweenObj(Dropdown, {Size = UDim2.new(1, 0, 0, 32)}); ListFrame.Visible = false; TweenObj(Icon, {Rotation = 0}); pcall(Callback, Itm) end)
-					end
-					ListFrame.CanvasSize = UDim2.new(0, 0, 0, #Items * (ItemHeight + 2) + 10)
-				end
-				Button.MouseButton1Click:Connect(function() Open = not Open; Update(); if Open then ListFrame.Visible = true; local H = math.min(#Items * 27 + 10, 150); TweenObj(Dropdown, {Size = UDim2.new(1, 0, 0, 32 + H + 5)}); TweenObj(ListFrame, {Size = UDim2.new(1, 0, 0, H)}); TweenObj(Icon, {Rotation = 180}) else TweenObj(Dropdown, {Size = UDim2.new(1, 0, 0, 32)}); ListFrame.Visible = false; TweenObj(Icon, {Rotation = 0}) end end)
-			end
 			return SecActs
 		end
-		return TabActs
+		return TabActions
 	end
-	return WinActions
+	return WindowActions
 end
+
 return Library
