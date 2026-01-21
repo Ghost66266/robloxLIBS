@@ -233,7 +233,6 @@ function Library:CreateWindow(Config)
 				Input.TextXAlignment = Enum.TextXAlignment.Left; Input.FocusLost:Connect(function() pcall(Callback, Input.Text) end)
 			end
 			return SecFuncs
-		end
 		return TabFuncs
 	-- [ VERSION V29 : FORCE VISIBLE ] --
 	function WindowFuncs:AddProfile()
@@ -307,7 +306,6 @@ function Library:CreateWindow(Config)
 		UserName.ZIndex = 30 -- Supérieur au fond
 		
 		print("DEBUG: Profil créé avec succès.")
-	end
 	return WindowFuncs
 end
 return Library
