@@ -236,68 +236,78 @@ function Library:CreateWindow(Config)
 		end
 		return TabFuncs
 	end
--- [ VERSION CORRIGÉE : ZINDEX FIX + ANTI-LAG ] --
+-- [ VERSION V29 : FORCE VISIBLE ] --
 	function WindowFuncs:AddProfile()
+		print("DEBUG: Lancement création profil...") -- Vérifie la console F9
 		local Player = Players.LocalPlayer
 		
-		-- 1. On réduit la taille de la liste des onglets pour faire de la place
-		TabContainer.Size = UDim2.new(1, 0, 1, -80) 
+		-- 1. Ajustement espace
+		TabContainer.Size = UDim2.new(1, 0, 1, -80)
 
-		-- 2. Création du cadre Profil (Fond)
+		-- 2. Le Cadre (FOND)
 		local ProfileFrame = Instance.new("Frame", Sidebar)
 		ProfileFrame.Name = "UserProfile"
 		ProfileFrame.Size = UDim2.new(1, -20, 0, 50)
 		ProfileFrame.Position = UDim2.new(0, 10, 1, -60)
-		ProfileFrame.BackgroundColor3 = Library.Theme.Main
+		ProfileFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35) -- Gris légèrement plus clair
 		ProfileFrame.BorderSizePixel = 0
-		ProfileFrame.ZIndex = 10 -- Le fond est au niveau 10
+		ProfileFrame.ZIndex = 20 -- ZIndex élevé
 		
 		Instance.new("UICorner", ProfileFrame).CornerRadius = UDim.new(0, 8)
 		Instance.new("UIStroke", ProfileFrame).Color = Library.Theme.Outline
 
-		-- 3. Image de l'Avatar
+		-- 3. L'Image (AVATAR)
 		local Avatar = Instance.new("ImageLabel", ProfileFrame)
+		Avatar.Name = "AvatarImage"
 		Avatar.Size = UDim2.new(0, 36, 0, 36)
 		Avatar.Position = UDim2.new(0, 8, 0.5, 0)
 		Avatar.AnchorPoint = Vector2.new(0, 0.5)
 		Avatar.BackgroundTransparency = 1
-		Avatar.ZIndex = 11 -- [FIX] IMPORTANT : On le met à 11 pour passer DEVANT le fond
+		Avatar.Image = "rbxassetid://0" -- Placeholder
+		Avatar.ZIndex = 30 -- Doit être supérieur au fond (20)
 		
 		Instance.new("UICorner", Avatar).CornerRadius = UDim.new(1, 0)
 
-		-- Chargement de l'image (Dans un thread séparé pour ne pas faire laguer le menu)
+		-- Chargement Image Sécurisé
 		task.spawn(function()
-			local Content = Players:GetUserThumbnailAsync(Player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48)
-			Avatar.Image = Content
+			-- On essaie de récupérer l'image
+			local success, content = pcall(function()
+				return Players:GetUserThumbnailAsync(Player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48)
+			end)
+			if success then
+				Avatar.Image = content
+			else
+				Avatar.Image = "rbxassetid://16645563" -- Image par défaut si échec (Blocky)
+			end
 		end)
 
-		-- 4. Nom d'affichage (Gros)
+		-- 4. Le Nom (DISPLAY NAME)
 		local DispName = Instance.new("TextLabel", ProfileFrame)
+		DispName.Name = "DisplayName"
 		DispName.Size = UDim2.new(1, -60, 0, 18)
 		DispName.Position = UDim2.new(0, 52, 0, 8)
 		DispName.BackgroundTransparency = 1
-		DispName.Text = Player.DisplayName
-		DispName.TextColor3 = Library.Theme.Text
+		DispName.Text = Player.DisplayName or "Player"
+		DispName.TextColor3 = Color3.fromRGB(255, 255, 255) -- BLANC FORCÉ
 		DispName.Font = Enum.Font.GothamBold
 		DispName.TextSize = 13
 		DispName.TextXAlignment = Enum.TextXAlignment.Left
-		DispName.ZIndex = 11 -- [FIX] Niveau 11 pour être visible
+		DispName.ZIndex = 30 -- Supérieur au fond
 
-		-- 5. Pseudo @ (Petit et gris)
+		-- 5. Le Pseudo (USERNAME)
 		local UserName = Instance.new("TextLabel", ProfileFrame)
+		UserName.Name = "UserName"
 		UserName.Size = UDim2.new(1, -60, 0, 15)
 		UserName.Position = UDim2.new(0, 52, 0, 26)
 		UserName.BackgroundTransparency = 1
-		UserName.Text = "@" .. Player.Name
-		UserName.TextColor3 = Library.Theme.TextDark
+		UserName.Text = "@" .. (Player.Name or "Guest")
+		UserName.TextColor3 = Color3.fromRGB(180, 180, 180) -- GRIS CLAIR FORCÉ
 		UserName.Font = Enum.Font.Gotham
 		UserName.TextSize = 11
 		UserName.TextXAlignment = Enum.TextXAlignment.Left
-		UserName.ZIndex = 11 -- [FIX] Niveau 11 pour être visible
+		UserName.ZIndex = 30 -- Supérieur au fond
 		
-		-- Animation Survol
-		ProfileFrame.MouseEnter:Connect(function() Tween(ProfileFrame, {BackgroundColor3 = Library.Theme.Hover}) end)
-		ProfileFrame.MouseLeave:Connect(function() Tween(ProfileFrame, {BackgroundColor3 = Library.Theme.Main}) end)
+		print("DEBUG: Profil créé avec succès.")end)
 	end
 	return WindowFuncs
 end
