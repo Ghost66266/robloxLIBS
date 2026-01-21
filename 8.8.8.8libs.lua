@@ -13,49 +13,41 @@ local Theme = {
 	Text = Color3.fromRGB(255, 255, 255)
 }
 
--- [[ SYSTÈME DE DRAG INTERNE SÉCURISÉ ]] --
-local function EnableInternalDrag(dragFrame, mainFrame)
-	local dragging, dragInput, dragStart, startPos
-	dragFrame.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			dragging = true
-			dragStart = input.Position
-			startPos = mainFrame.Position
-		end
-	end)
-	UIS.InputChanged:Connect(function(input)
-		if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-			local delta = input.Position - dragStart
-			mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-		end
-	end)
-	UIS.InputEnded:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			dragging = false
-		end
-	end)
+-- [[ EFFET ONDE ]] --
+local function CreateRipple(obj)
+	local Mouse = game.Players.LocalPlayer:GetMouse()
+	local Circle = Instance.new("ImageLabel")
+	Circle.Parent = obj
+	Circle.BackgroundColor3 = Color3.new(1, 1, 1)
+	Circle.BackgroundTransparency = 1
+	Circle.Image = "rbxassetid://266543268"
+	Circle.ImageColor3 = Theme.Accent
+	Circle.ImageTransparency = 0.5
+	Circle.ZIndex = 10
+	local RelX = Mouse.X - obj.AbsolutePosition.X
+	local RelY = Mouse.Y - obj.AbsolutePosition.Y
+	Circle.Position = UDim2.new(0, RelX, 0, RelY)
+	Circle.AnchorPoint = Vector2.new(0.5, 0.5)
+	TS:Create(Circle, TweenInfo.new(0.5), {Size = UDim2.new(0, obj.AbsoluteSize.X * 2.5, 0, obj.AbsoluteSize.X * 2.5), ImageTransparency = 1}):Play()
+	Debris:AddItem(Circle, 0.6)
 end
 
 function Library:CreateWelcomeScreen()
 	local WelcomeGui = Instance.new("ScreenGui", CoreGui)
-	WelcomeGui.Name = "8888_Welcome"
-	WelcomeGui.DisplayOrder = 999999
 	WelcomeGui.IgnoreGuiInset = true
-
 	local TextLabel = Instance.new("TextLabel", WelcomeGui)
-	TextLabel.Size = UDim2.new(1, 0, 1, 0)
+	TextLabel.Size = UDim2.new(1, 0, 0, 200)
+	TextLabel.Position = UDim2.new(0, 0, 0.5, -100)
 	TextLabel.BackgroundTransparency = 1
 	TextLabel.Text = "WELCOME <font color='#AA00FF'>8.8.8.8</font> UI"
-	TextLabel.RichText = true
+	TextLabel.RichText = true -- FIX : Activé ici
 	TextLabel.TextColor3 = Color3.new(1, 1, 1)
 	TextLabel.Font = Enum.Font.GothamBold
-	TextLabel.TextSize = 0
-	TextLabel.TextTransparency = 1
-
-	TS:Create(TextLabel, TweenInfo.new(1.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {TextSize = 85, TextTransparency = 0}):Play()
-	task.delay(5, function()
-		TS:Create(TextLabel, TweenInfo.new(1, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {TextTransparency = 1, TextSize = 120}):Play()
-		Debris:AddItem(WelcomeGui, 1.2)
+	TextLabel.TextSize = 80
+	TS:Create(TextLabel, TweenInfo.new(1), {TextSize = 85}):Play()
+	task.delay(4, function()
+		TS:Create(TextLabel, TweenInfo.new(1), {TextTransparency = 1}):Play()
+		Debris:AddItem(WelcomeGui, 1.1)
 	end)
 end
 
@@ -67,45 +59,40 @@ function Library:CreateWindow(title)
 	Main.Size = UDim2.new(0, 520, 0, 380)
 	Main.Position = UDim2.new(0.5, -260, 0.5, -190)
 	Main.BackgroundColor3 = Theme.Main
-	Main.Active = true
-	Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
+	Instance.new("UICorner", Main)
 	Instance.new("UIStroke", Main).Color = Theme.Outline
 
 	local Header = Instance.new("Frame", Main)
+	Header.Name = "Header"
 	Header.Size = UDim2.new(1, 0, 0, 50)
 	Header.BackgroundColor3 = Theme.Section
-	Header.Active = true
 	Instance.new("UICorner", Header)
-	
-	-- ON ACTIVE LE DRAG UNIQUEMENT SUR LE HEADER
-	EnableInternalDrag(Header, Main)
 
 	local TitleLabel = Instance.new("TextLabel", Header)
 	TitleLabel.Size = UDim2.new(1, 0, 1, 0)
 	TitleLabel.Position = UDim2.new(0, 15, 0, 0)
 	TitleLabel.Text = title or "8.8.8.8"
+	TitleLabel.RichText = true -- FIX : Activé pour le titre
 	TitleLabel.TextColor3 = Theme.Text
 	TitleLabel.Font = Enum.Font.GothamBold
 	TitleLabel.TextSize = 17
 	TitleLabel.BackgroundTransparency = 1
-	TitleLabel.TextXAlignment = "Left"
+	TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 
 	local Scroll = Instance.new("ScrollingFrame", Main)
 	Scroll.Size = UDim2.new(1, -20, 1, -75)
 	Scroll.Position = UDim2.new(0, 10, 0, 60)
 	Scroll.BackgroundTransparency = 1
 	Scroll.ScrollBarThickness = 0
-	Scroll.AutomaticCanvasSize = "Y"
-	local Layout = Instance.new("UIListLayout", Scroll)
-	Layout.Padding = UDim.new(0, 12)
-	Layout.HorizontalAlignment = "Center"
+	Scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	Instance.new("UIListLayout", Scroll).Padding = UDim.new(0, 12)
 
 	local WindowActions = {}
 
 	function WindowActions:AddSection(sTitle)
 		local Section = Instance.new("Frame", Scroll)
 		Section.Size = UDim2.new(0.96, 0, 0, 30)
-		Section.AutomaticSize = "Y"
+		Section.AutomaticSize = Enum.AutomaticSize.Y
 		Section.BackgroundColor3 = Theme.Section
 		Instance.new("UICorner", Section)
 
@@ -113,7 +100,7 @@ function Library:CreateWindow(title)
 		Container.Size = UDim2.new(1, 0, 1, 0)
 		Container.BackgroundTransparency = 1
 		Instance.new("UIListLayout", Container).Padding = UDim.new(0, 8)
-		Instance.new("UIPadding", Container).PaddingTop = UDim.new(0, 15)
+		Instance.new("UIPadding", Container).PaddingTop = UDim.new(0, 10)
 		Instance.new("UIPadding", Container).PaddingBottom = UDim.new(0, 10)
 
 		local SectionActions = {}
@@ -124,12 +111,16 @@ function Library:CreateWindow(title)
 			Btn.BackgroundColor3 = Theme.Main
 			Btn.Text = "  " .. text
 			Btn.TextColor3 = Color3.fromRGB(200, 200, 200)
-			Btn.Font = "GothamMedium"
+			Btn.Font = Enum.Font.GothamMedium
 			Btn.TextSize = 14
-			Btn.TextXAlignment = "Left"
-			Btn.AutoButtonColor = true
-			Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 6)
-			Btn.MouseButton1Click:Connect(callback)
+			Btn.TextXAlignment = Enum.TextXAlignment.Left
+			Btn.AutoButtonColor = false
+			Btn.ClipsDescendants = true
+			Instance.new("UICorner", Btn)
+			Btn.MouseButton1Click:Connect(function() 
+				CreateRipple(Btn) -- L'effet Ripple est ici !
+				callback() 
+			end)
 		end
 
 		function SectionActions:AddSlider(text, min, max, default, callback)
@@ -142,40 +133,33 @@ function Library:CreateWindow(title)
 			Label.Size = UDim2.new(1, 0, 0, 20)
 			Label.TextColor3 = Theme.Text
 			Label.BackgroundTransparency = 1
-			Label.TextXAlignment = "Left"
+			Label.TextXAlignment = Enum.TextXAlignment.Left
 
 			local Bar = Instance.new("Frame", SliderFrame)
+			Bar.Name = "Bar"
 			Bar.Size = UDim2.new(1, -10, 0, 6)
 			Bar.Position = UDim2.new(0, 5, 0, 30)
 			Bar.BackgroundColor3 = Theme.Outline
 			Instance.new("UICorner", Bar)
 
 			local Fill = Instance.new("Frame", Bar)
+			Fill.Name = "Fill"
 			Fill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
 			Fill.BackgroundColor3 = Theme.Accent
 			Instance.new("UICorner", Fill)
 
 			local sliding = false
-			local function UpdateSlider()
-				local mousePos = UIS:GetMouseLocation().X
-				local barPos = Bar.AbsolutePosition.X
-				local barSize = Bar.AbsoluteSize.X
-				local percent = math.clamp((mousePos - barPos) / barSize, 0, 1)
+			local function Update()
+				local percent = math.clamp((UIS:GetMouseLocation().X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1)
 				Fill.Size = UDim2.new(percent, 0, 1, 0)
 				local val = math.floor(min + (max - min) * percent)
 				Label.Text = "  " .. text .. " : " .. val
 				callback(val)
 			end
 
-			Bar.InputBegan:Connect(function(input)
-				if input.UserInputType == Enum.UserInputType.MouseButton1 then sliding = true UpdateSlider() end
-			end)
-			UIS.InputEnded:Connect(function(input)
-				if input.UserInputType == Enum.UserInputType.MouseButton1 then sliding = false end
-			end)
-			UIS.InputChanged:Connect(function(input)
-				if sliding and input.UserInputType == Enum.UserInputType.MouseMovement then UpdateSlider() end
-			end)
+			Bar.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then sliding = true Update() end end)
+			UIS.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then sliding = false end end)
+			UIS.InputChanged:Connect(function(i) if sliding and i.UserInputType == Enum.UserInputType.MouseMovement then Update() end end)
 		end
 
 		return SectionActions
