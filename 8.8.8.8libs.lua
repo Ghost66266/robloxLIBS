@@ -129,16 +129,16 @@ function Library:CreateWindow(Config)
 	for _, ui in pairs(CoreGui:GetChildren()) do if ui.Name == "WindUI_" .. WindowName then ui:Destroy() end end
 	local ScreenGui = Instance.new("ScreenGui"); ScreenGui.Name = "WindUI_" .. WindowName; ScreenGui.IgnoreGuiInset = true; ProtectGui(ScreenGui)
 
-	local Main = Instance.new("Frame", ScreenGui); Main.Name = "Main"; Main.Size = UDim2.new(0,0,0,0); Main.Position = UDim2.new(0.5,0,0.5,0); Main.AnchorPoint = Vector2.new(0.5,0.5); Main.BackgroundColor3 = Library.Theme.Main; Main.ClipsDescendants = true
-	-- [ CORRECTION BORDURE VIOLETTE ] --
-	Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 6)
+	-- local Main = Instance.new("Frame", ScreenGui); Main.Name = "Main"; Main.Size = UDim2.new(0,0,0,0); Main.Position = UDim2.new(0.5,0,0.5,0); Main.AnchorPoint = Vector2.new(0.5,0.5); Main.BackgroundColor3 = Library.Theme.Main; Main.ClipsDescendants = true
+	-- -- [ CORRECTION BORDURE VIOLETTE ] --
+	-- Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 6)
 	
-	local MainStroke = Instance.new("UIStroke", Main)
-	MainStroke.Name = "MainBorder"
-	MainStroke.Color = Color3.fromRGB(120, 90, 255) -- VIOLET FORCÉ (Directement ici)
-	MainStroke.Thickness = 0 -- ÉPAISSEUR 3 (Pour que ce soit bien visible)
-	MainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	Tween(Main, {Size = Size}, 0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+	-- local MainStroke = Instance.new("UIStroke", Main)
+	-- MainStroke.Name = "MainBorder"
+	-- MainStroke.Color = Color3.fromRGB(120, 90, 255) -- VIOLET FORCÉ (Directement ici)
+	-- MainStroke.Thickness = 0 -- ÉPAISSEUR 3 (Pour que ce soit bien visible)
+	-- MainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	-- Tween(Main, {Size = Size}, 0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
 
 	local Sidebar = Instance.new("Frame", Main); Sidebar.Name = "Sidebar"; Sidebar.Size = UDim2.new(0, 180, 1, 0); Sidebar.BackgroundColor3 = Library.Theme.Sidebar; Sidebar.BorderSizePixel = 0; Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 6)
 	local SidebarFix = Instance.new("Frame", Sidebar); SidebarFix.BorderSizePixel=0; SidebarFix.BackgroundColor3=Library.Theme.Sidebar; SidebarFix.Size=UDim2.new(0,10,1,0); SidebarFix.Position=UDim2.new(1,-10,0,0); SidebarFix.ZIndex=0
