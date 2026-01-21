@@ -309,20 +309,33 @@ function Library:CreateWindow(Config)
             Page.CanvasSize = UDim2.new(0, 0, 0, PageList.AbsoluteContentSize.Y + 20)
         end)
 
+        -- [ REMPLACE LE BLOC TabBtn.MouseButton1Click PAR CA ] --
         TabBtn.MouseButton1Click:Connect(function()
-            -- Reset others
-            for _, btn in pairs(TabContainer:GetChildren()) do
-                if btn:IsA("TextButton") then
+            -- 1. On remet tous les autres boutons en gris
+            for _, btn in pairs(TabContainer:GetChildren()) do 
+                if btn:IsA("TextButton") then 
                     Tween(btn.TextLabel, {TextColor3 = Library.Theme.TextDark})
-                    Tween(btn.Frame, {Transparency = 1})
-                end
-            end
-            for _, p in pairs(Content:GetChildren()) do
-                if p:IsA("ScrollingFrame") then p.Visible = false end
+                    Tween(btn.Frame, {Transparency = 1}) 
+                end 
             end
             
-            -- Active current
+            -- 2. On cache toutes les pages actuelles
+            for _, p in pairs(Content:GetChildren()) do 
+                if p:IsA("ScrollingFrame") or p:IsA("Frame") then 
+                    p.Visible = false 
+                end 
+            end
+            
+            -- 3. ANIMATION DE TRANSITION (Le Slide Up)
             Page.Visible = true
+            Page.Position = UDim2.new(0, 0, 0, 20) -- On place la page 20 pixels plus bas
+            
+            -- On la fait remonter à 0 avec un effet fluide (Quart Out)
+            TweenService:Create(Page, TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                Position = UDim2.new(0, 0, 0, 0)
+            }):Play()
+
+            -- 4. On allume le bouton actuel (Texte blanc + Barre violette)
             Tween(TabLabel, {TextColor3 = Library.Theme.Text})
             Tween(Indicator, {Transparency = 0})
         end)
