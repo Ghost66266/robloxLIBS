@@ -1,6 +1,7 @@
 local UIS = game:GetService("UserInputService")
 local TS = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
+local Debris = game:GetService("Debris")
 
 local Library = {}
 
@@ -12,7 +13,7 @@ local Theme = {
 	Text = Color3.fromRGB(255, 255, 255)
 }
 
--- Fonction Ripple Ultra-Stable
+-- [[ EFFET ONDE DE CHOC ]] --
 local function CreateRipple(obj)
 	local Mouse = game.Players.LocalPlayer:GetMouse()
 	local Circle = Instance.new("ImageLabel")
@@ -34,34 +35,62 @@ local function CreateRipple(obj)
 		Size = UDim2.new(0, obj.AbsoluteSize.X * 2, 0, obj.AbsoluteSize.X * 2),
 		ImageTransparency = 1
 	}):Play()
-	game:GetService("Debris"):AddItem(Circle, 0.6)
+	Debris:AddItem(Circle, 0.6)
 end
 
+-- [[ ÉCRAN DE BIENVENUE ANTI-CRASH ]] --
+function Library:CreateWelcomeScreen()
+	local WelcomeGui = Instance.new("ScreenGui", CoreGui)
+	WelcomeGui.Name = "8888_Welcome"
+
+	local BackFrame = Instance.new("Frame", WelcomeGui)
+	BackFrame.Size = UDim2.new(1, 0, 1, 0)
+	BackFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	BackFrame.BackgroundTransparency = 1
+	BackFrame.BorderSizePixel = 0
+
+	local TextLabel = Instance.new("TextLabel", WelcomeGui)
+	TextLabel.Size = UDim2.new(0, 500, 0, 100)
+	TextLabel.Position = UDim2.new(0.5, -250, 0.5, -50)
+	TextLabel.BackgroundTransparency = 1
+	TextLabel.Text = "WELCOME <font color='#AA00FF'>8.8.8.8</font> UI"
+	TextLabel.RichText = true
+	TextLabel.TextColor3 = Color3.new(1, 1, 1)
+	TextLabel.Font = Enum.Font.GothamBold
+	TextLabel.TextSize = 0
+	TextLabel.TextTransparency = 1
+
+	TS:Create(BackFrame, TweenInfo.new(0.5), {BackgroundTransparency = 0.4}):Play()
+	TS:Create(TextLabel, TweenInfo.new(0.8, Enum.EasingStyle.Back), {TextSize = 40, TextTransparency = 0}):Play()
+
+	task.delay(3, function()
+		TS:Create(TextLabel, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
+		TS:Create(BackFrame, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
+		Debris:AddItem(WelcomeGui, 0.6)
+	end)
+end
+
+-- [[ FENÊTRE PRINCIPALE ]] --
 function Library:CreateWindow(title)
-	local UI = Instance.new("ScreenGui")
-	UI.Name = "8888_Final_Lib"
-	UI.Parent = CoreGui
+	local UI = Instance.new("ScreenGui", CoreGui)
+	UI.Name = "8888_MainUI"
 
 	local Main = Instance.new("Frame", UI)
 	Main.Size = UDim2.new(0, 500, 0, 350)
 	Main.Position = UDim2.new(0.5, -250, 0.5, -175)
 	Main.BackgroundColor3 = Theme.Main
 	Main.BorderSizePixel = 0
-	Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
+	Instance.new("UICorner", Main)
 	Instance.new("UIStroke", Main).Color = Theme.Outline
 
 	local Scroll = Instance.new("ScrollingFrame", Main)
 	Scroll.Size = UDim2.new(1, -20, 1, -20)
 	Scroll.Position = UDim2.new(0, 10, 0, 10)
 	Scroll.BackgroundTransparency = 1
-	Scroll.BorderSizePixel = 0
 	Scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
 	Scroll.CanvasSize = UDim2.new(0,0,0,0)
 	Scroll.ScrollBarThickness = 0
-	
-	local Layout = Instance.new("UIListLayout", Scroll)
-	Layout.Padding = UDim.new(0, 10)
-	Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	Instance.new("UIListLayout", Scroll).Padding = UDim.new(0, 10)
 
 	local WindowActions = {}
 
@@ -80,7 +109,6 @@ function Library:CreateWindow(title)
 		Instance.new("UIPadding", Container).PaddingBottom = UDim.new(0, 10)
 
 		local SectionActions = {}
-
 		function SectionActions:AddButton(text, callback)
 			local Btn = Instance.new("TextButton", Container)
 			Btn.Size = UDim2.new(0.9, 0, 0, 35)
@@ -88,10 +116,9 @@ function Library:CreateWindow(title)
 			Btn.Text = text
 			Btn.TextColor3 = Theme.Text
 			Btn.Font = Enum.Font.GothamMedium
-			Btn.ClipsDescendants = true
 			Btn.AutoButtonColor = false
+			Btn.ClipsDescendants = true
 			Instance.new("UICorner", Btn)
-			
 			Btn.MouseButton1Click:Connect(function()
 				CreateRipple(Btn)
 				callback()
@@ -101,97 +128,5 @@ function Library:CreateWindow(title)
 	end
 	return WindowActions
 end
-function Library:Notify(title, text)
-    local NotifyGui = Instance.new("ScreenGui", CoreGui)
-    local Holder = Instance.new("Frame", NotifyGui)
-    Holder.Size = UDim2.new(0, 250, 0, 80)
-    Holder.Position = UDim2.new(1, 20, 0.8, 0) -- Commence hors écran
-    Holder.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-    Instance.new("UICorner", Holder)
-    Instance.new("UIStroke", Holder).Color = Color3.fromRGB(170, 0, 255)
 
-    local T = Instance.new("TextLabel", Holder)
-    T.Size = UDim2.new(1, -20, 0, 30)
-    T.Position = UDim2.new(0, 10, 0, 5)
-    T.Text = title:upper()
-    T.TextColor3 = Color3.fromRGB(170, 0, 255)
-    T.Font = Enum.Font.GothamBold
-    T.BackgroundTransparency = 1
-    T.TextXAlignment = Enum.TextXAlignment.Left
-
-    local D = Instance.new("TextLabel", Holder)
-    D.Size = UDim2.new(1, -20, 0, 40)
-    D.Position = UDim2.new(0, 10, 0, 30)
-    D.Text = text
-    D.TextColor3 = Color3.new(1,1,1)
-    D.Font = Enum.Font.Gotham
-    D.TextSize = 12
-    D.BackgroundTransparency = 1
-    D.TextWrapped = true
-    D.TextXAlignment = Enum.TextXAlignment.Left
-
-    -- Animation d'entrée (Glissement)
-    Holder:TweenPosition(UDim2.new(1, -270, 0.8, 0), "Out", "Quart", 0.5, true)
-    
-    -- Auto-destruction après 4 secondes
-    task.delay(4, function()
-        Holder:TweenPosition(UDim2.new(1, 20, 0.8, 0), "In", "Quart", 0.5, true)
-        task.wait(0.5)
-        NotifyGui:Destroy()
-    end)
-end
-
-
-function Library:CreateWelcomeScreen()
-    local Debris = game:GetService("Debris")
-    
-    -- Création sécurisée
-    local WelcomeGui = Instance.new("ScreenGui")
-    WelcomeGui.Name = "8888_Safe_Welcome"
-    WelcomeGui.Parent = CoreGui
-    WelcomeGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-
-    -- Fond noir stable (Remplace le Blur qui faisait crash)
-    local BackFrame = Instance.new("Frame", WelcomeGui)
-    BackFrame.Size = UDim2.new(1, 0, 1, 0)
-    BackFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    BackFrame.BackgroundTransparency = 1
-    BackFrame.BorderSizePixel = 0
-
-    local TextLabel = Instance.new("TextLabel", WelcomeGui)
-    TextLabel.Size = UDim2.new(0, 500, 0, 100)
-    TextLabel.Position = UDim2.new(0.5, -250, 0.5, -50)
-    TextLabel.BackgroundTransparency = 1
-    TextLabel.Text = "WELCOME <font color='#AA00FF'>8.8.8.8</font> UI"
-    TextLabel.RichText = true
-    TextLabel.TextColor3 = Color3.new(1, 1, 1)
-    TextLabel.Font = Enum.Font.GothamBold
-    TextLabel.TextSize = 2 -- Commence tout petit
-    TextLabel.TextTransparency = 1
-
-    -- Animation d'apparition (Fade In + Zoom)
-    TS:Create(BackFrame, TweenInfo.new(0.5), {BackgroundTransparency = 0.4}):Play()
-    TS:Create(TextLabel, TweenInfo.new(0.8, Enum.EasingStyle.Back), {
-        TextSize = 45,
-        TextTransparency = 0
-    }):Play()
-
-    -- Petite pulsation violette
-    task.spawn(function()
-        for i = 1, 3 do
-            TS:Create(TextLabel, TweenInfo.new(0.5), {TextColor3 = Color3.fromRGB(170, 0, 255)}):Play()
-            task.wait(0.5)
-            TS:Create(TextLabel, TweenInfo.new(0.5), {TextColor3 = Color3.new(1, 1, 1)}):Play()
-            task.wait(0.5)
-        end
-    end)
-
-    -- Fermeture automatique propre
-    task.delay(3, function()
-        TS:Create(TextLabel, TweenInfo.new(0.5), {TextTransparency = 1, TextSize = 60}):Play()
-        TS:Create(BackFrame, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
-        Debris:AddItem(WelcomeGui, 0.6)
-    end)
-end
-
-return Library -- TRÈS IMPORTANT
+return Library
