@@ -141,6 +141,14 @@ function Library:CreateWindow(Config)
 	
 	-- Arrondi des coins uniquement (Pas de UIStroke ici !)
 	Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 6); 
+
+-- >>> COLLE LE BLOC BORDURE ICI <<< --
+    local MainStroke = Instance.new("UIStroke", Main)
+    MainStroke.Name = "Outline"
+    MainStroke.Color = Color3.fromRGB(120, 90, 255) -- Violet forcé
+    MainStroke.Thickness = 2 
+    MainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    -- --------------------------------- --
 	
 	-- Animation ouverture
 	Tween(Main, {Size = Size}, 0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
