@@ -13,55 +13,33 @@ local Theme = {
 	Text = Color3.fromRGB(255, 255, 255)
 }
 
--- [[ EFFET ONDE DE CHOC ]] --
-local function CreateRipple(obj)
-	local Mouse = game.Players.LocalPlayer:GetMouse()
-	local Circle = Instance.new("ImageLabel")
-	Circle.Parent = obj
-	Circle.BackgroundColor3 = Color3.new(1, 1, 1)
-	Circle.BackgroundTransparency = 1
-	Circle.Image = "rbxassetid://266543268"
-	Circle.ImageColor3 = Theme.Accent
-	Circle.ImageTransparency = 0.5
-	Circle.ZIndex = 10
-	
-	local RelX = Mouse.X - obj.AbsolutePosition.X
-	local RelY = Mouse.Y - obj.AbsolutePosition.Y
-	Circle.Position = UDim2.new(0, RelX, 0, RelY)
-	Circle.AnchorPoint = Vector2.new(0.5, 0.5)
-	Circle.Size = UDim2.new(0, 0, 0, 0)
-
-	TS:Create(Circle, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-		Size = UDim2.new(0, obj.AbsoluteSize.X * 2, 0, obj.AbsoluteSize.X * 2),
-		ImageTransparency = 1
-	}):Play()
-	Debris:AddItem(Circle, 0.6)
-end
-
--- [[ ÉCRAN DE BIENVENUE ANTI-CRASH ]] --
+-- [[ ÉCRAN DE BIENVENUE RÉPARÉ ]] --
 function Library:CreateWelcomeScreen()
 	local WelcomeGui = Instance.new("ScreenGui", CoreGui)
-	WelcomeGui.Name = "8888_Welcome"
+	WelcomeGui.Name = "8888_Welcome_Fix"
+	WelcomeGui.DisplayOrder = 999 -- Force l'affichage au premier plan
 
 	local BackFrame = Instance.new("Frame", WelcomeGui)
 	BackFrame.Size = UDim2.new(1, 0, 1, 0)
 	BackFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 	BackFrame.BackgroundTransparency = 1
 	BackFrame.BorderSizePixel = 0
+	BackFrame.ZIndex = 1
 
 	local TextLabel = Instance.new("TextLabel", WelcomeGui)
-	TextLabel.Size = UDim2.new(0, 500, 0, 100)
-	TextLabel.Position = UDim2.new(0.5, -250, 0.5, -50)
+	TextLabel.Size = UDim2.new(1, 0, 0, 100)
+	TextLabel.Position = UDim2.new(0, 0, 0.5, -50)
 	TextLabel.BackgroundTransparency = 1
-	TextLabel.Text = "WELCOME <font color='#AA00FF'>8.8.8.8</font> UI"
-	TextLabel.RichText = true
-	TextLabel.TextColor3 = Color3.new(1, 1, 1)
+	TextLabel.Text = "WELCOME 8.8.8.8 UI" -- Simple texte sans balises pour tester
+	TextLabel.TextColor3 = Theme.Accent
 	TextLabel.Font = Enum.Font.GothamBold
-	TextLabel.TextSize = 0
+	TextLabel.TextSize = 40
 	TextLabel.TextTransparency = 1
+	TextLabel.ZIndex = 2 -- Toujours au-dessus du fond noir
 
-	TS:Create(BackFrame, TweenInfo.new(0.5), {BackgroundTransparency = 0.4}):Play()
-	TS:Create(TextLabel, TweenInfo.new(0.8, Enum.EasingStyle.Back), {TextSize = 40, TextTransparency = 0}):Play()
+	-- Animation
+	TS:Create(BackFrame, TweenInfo.new(0.5), {BackgroundTransparency = 0.5}):Play()
+	TS:Create(TextLabel, TweenInfo.new(0.8, Enum.EasingStyle.Back), {TextTransparency = 0}):Play()
 
 	task.delay(3, function()
 		TS:Create(TextLabel, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
@@ -87,6 +65,7 @@ function Library:CreateWindow(title)
 	Scroll.Size = UDim2.new(1, -20, 1, -20)
 	Scroll.Position = UDim2.new(0, 10, 0, 10)
 	Scroll.BackgroundTransparency = 1
+	Scroll.BorderSizePixel = 0
 	Scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
 	Scroll.CanvasSize = UDim2.new(0,0,0,0)
 	Scroll.ScrollBarThickness = 0
@@ -120,7 +99,6 @@ function Library:CreateWindow(title)
 			Btn.ClipsDescendants = true
 			Instance.new("UICorner", Btn)
 			Btn.MouseButton1Click:Connect(function()
-				CreateRipple(Btn)
 				callback()
 			end)
 		end
