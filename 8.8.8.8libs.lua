@@ -136,7 +136,7 @@ function Library:CreateWindow(Config)
 	local MainStroke = Instance.new("UIStroke", Main)
 	MainStroke.Name = "MainBorder"
 	MainStroke.Color = Color3.fromRGB(120, 90, 255) -- VIOLET FORCÉ (Directement ici)
-	MainStroke.Thickness = 1 -- ÉPAISSEUR 3 (Pour que ce soit bien visible)
+	MainStroke.Thickness = 0 -- ÉPAISSEUR 3 (Pour que ce soit bien visible)
 	MainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 	Tween(Main, {Size = Size}, 0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
 
