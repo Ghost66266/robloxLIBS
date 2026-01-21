@@ -141,66 +141,56 @@ function Library:Notify(title, text)
     end)
 end
 
+
 function Library:CreateWelcomeScreen()
+    local Debris = game:GetService("Debris")
+    
+    -- Création sécurisée
     local WelcomeGui = Instance.new("ScreenGui")
-    WelcomeGui.Name = "8888_Welcome_Overlay"
+    WelcomeGui.Name = "8888_Safe_Welcome"
     WelcomeGui.Parent = CoreGui
     WelcomeGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-    -- Fond avec flou (Blur) pour un effet de profondeur
-    local BackgroundBlur = Instance.new("Frame", WelcomeGui)
-    BackgroundBlur.Size = UDim2.new(1, 0, 1, 0)
-    BackgroundBlur.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    BackgroundBlur.BackgroundTransparency = 0.5 -- Légèrement transparent
-    BackgroundBlur.ZIndex = 0
+    -- Fond noir stable (Remplace le Blur qui faisait crash)
+    local BackFrame = Instance.new("Frame", WelcomeGui)
+    BackFrame.Size = UDim2.new(1, 0, 1, 0)
+    BackFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    BackFrame.BackgroundTransparency = 1
+    BackFrame.BorderSizePixel = 0
 
-    local BlurEffect = Instance.new("BlurEffect", game:GetService("Lighting"))
-    BlurEffect.Size = 0
-    BlurEffect.Enabled = true
-    TS:Create(BlurEffect, TweenInfo.new(0.5), {Size = 15}):Play() -- Appliquer le flou
+    local TextLabel = Instance.new("TextLabel", WelcomeGui)
+    TextLabel.Size = UDim2.new(0, 500, 0, 100)
+    TextLabel.Position = UDim2.new(0.5, -250, 0.5, -50)
+    TextLabel.BackgroundTransparency = 1
+    TextLabel.Text = "WELCOME <font color='#AA00FF'>8.8.8.8</font> UI"
+    TextLabel.RichText = true
+    TextLabel.TextColor3 = Color3.new(1, 1, 1)
+    TextLabel.Font = Enum.Font.GothamBold
+    TextLabel.TextSize = 2 -- Commence tout petit
+    TextLabel.TextTransparency = 1
 
-    -- Cadre du texte central
-    local TextFrame = Instance.new("Frame", WelcomeGui)
-    TextFrame.Size = UDim2.new(0, 500, 0, 100)
-    TextFrame.Position = UDim2.new(0.5, -250, 0.5, -50)
-    TextFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-    TextFrame.BackgroundTransparency = 1
-    TextFrame.ClipsDescendants = true -- Important pour l'animation de texte
-
-    local WelcomeText = Instance.new("TextLabel", TextFrame)
-    WelcomeText.Size = UDim2.new(1, 0, 1, 0)
-    WelcomeText.Position = UDim2.new(0, 0, 0, 100) -- Commence en bas
-    WelcomeText.Text = "WELCOME <font color='#AA00FF'>8.8.8.8</font> UI"
-    WelcomeText.RichText = true
-    WelcomeText.TextColor3 = Theme.Text
-    WelcomeText.Font = Enum.Font.GothamBold
-    WelcomeText.TextSize = 50
-    WelcomeText.TextWrapped = true
-    WelcomeText.BackgroundTransparency = 1
-    WelcomeText.ZIndex = 1
-
-    -- Animation d'entrée du texte (Glissement vertical)
-    TS:Create(WelcomeText, TweenInfo.new(0.8, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-        Position = UDim2.new(0, 0, 0, 0)
+    -- Animation d'apparition (Fade In + Zoom)
+    TS:Create(BackFrame, TweenInfo.new(0.5), {BackgroundTransparency = 0.4}):Play()
+    TS:Create(TextLabel, TweenInfo.new(0.8, Enum.EasingStyle.Back), {
+        TextSize = 45,
+        TextTransparency = 0
     }):Play()
 
-    -- Animation de pulsation néon sur le texte
-    local PulseTween = TS:Create(WelcomeText, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
-        TextColor3 = Theme.Accent
-    })
-    PulseTween:Play()
+    -- Petite pulsation violette
+    task.spawn(function()
+        for i = 1, 3 do
+            TS:Create(TextLabel, TweenInfo.new(0.5), {TextColor3 = Color3.fromRGB(170, 0, 255)}):Play()
+            task.wait(0.5)
+            TS:Create(TextLabel, TweenInfo.new(0.5), {TextColor3 = Color3.new(1, 1, 1)}):Play()
+            task.wait(0.5)
+        end
+    end)
 
-    -- Durée d'affichage et disparition
-    task.delay(4, function() -- Reste 4 secondes
-        TS:Create(WelcomeText, TweenInfo.new(0.6, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
-            Position = UDim2.new(0, 0, 0, -100) -- Sort par le haut
-        }):Play()
-        TS:Create(BackgroundBlur, TweenInfo.new(0.6), {BackgroundTransparency = 1}):Play()
-        TS:Create(BlurEffect, TweenInfo.new(0.6), {Size = 0}):Play()
-        
-        task.wait(0.7)
-        WelcomeGui:Destroy()
-        BlurEffect:Destroy()
+    -- Fermeture automatique propre
+    task.delay(3, function()
+        TS:Create(TextLabel, TweenInfo.new(0.5), {TextTransparency = 1, TextSize = 60}):Play()
+        TS:Create(BackFrame, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
+        Debris:AddItem(WelcomeGui, 0.6)
     end)
 end
 
