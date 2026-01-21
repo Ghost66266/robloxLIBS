@@ -236,39 +236,40 @@ function Library:CreateWindow(Config)
 		end
 		return TabFuncs
 	end
-	-- [ NOUVELLE FONCTION : CARTE DE PROFIL ] --
+-- [ VERSION CORRIGÉE : ZINDEX FIX + ANTI-LAG ] --
 	function WindowFuncs:AddProfile()
 		local Player = Players.LocalPlayer
-		local UserId = Player.UserId
-		local ThumbType = Enum.ThumbnailType.HeadShot
-		local ThumbSize = Enum.ThumbnailSize.Size48x48
-		local Content, IsReady = Players:GetUserThumbnailAsync(UserId, ThumbType, ThumbSize)
+		
+		-- 1. On réduit la taille de la liste des onglets pour faire de la place
+		TabContainer.Size = UDim2.new(1, 0, 1, -80) 
 
-		-- 1. On réduit la taille de la liste des onglets pour faire de la place en bas
-		TabContainer.Size = UDim2.new(1, 0, 1, -130) -- On laisse 60px en bas pour le profil
-
-		-- 2. Création du cadre Profil
+		-- 2. Création du cadre Profil (Fond)
 		local ProfileFrame = Instance.new("Frame", Sidebar)
 		ProfileFrame.Name = "UserProfile"
 		ProfileFrame.Size = UDim2.new(1, -20, 0, 50)
-		ProfileFrame.Position = UDim2.new(0, 10, 1, -60) -- Tout en bas
-		ProfileFrame.BackgroundColor3 = Library.Theme.Main -- Un peu plus foncé que la sidebar
+		ProfileFrame.Position = UDim2.new(0, 10, 1, -60)
+		ProfileFrame.BackgroundColor3 = Library.Theme.Main
 		ProfileFrame.BorderSizePixel = 0
-		ProfileFrame.ZIndex = 10
+		ProfileFrame.ZIndex = 10 -- Le fond est au niveau 10
 		
 		Instance.new("UICorner", ProfileFrame).CornerRadius = UDim.new(0, 8)
 		Instance.new("UIStroke", ProfileFrame).Color = Library.Theme.Outline
 
-		-- 3. Image de l'Avatar (Rond)
+		-- 3. Image de l'Avatar
 		local Avatar = Instance.new("ImageLabel", ProfileFrame)
 		Avatar.Size = UDim2.new(0, 36, 0, 36)
 		Avatar.Position = UDim2.new(0, 8, 0.5, 0)
 		Avatar.AnchorPoint = Vector2.new(0, 0.5)
 		Avatar.BackgroundTransparency = 1
-		Avatar.Image = Content -- L'image récupérée
+		Avatar.ZIndex = 11 -- [FIX] IMPORTANT : On le met à 11 pour passer DEVANT le fond
 		
-		local Round = Instance.new("UICorner", Avatar)
-		Round.CornerRadius = UDim.new(1, 0) -- Cercle parfait
+		Instance.new("UICorner", Avatar).CornerRadius = UDim.new(1, 0)
+
+		-- Chargement de l'image (Dans un thread séparé pour ne pas faire laguer le menu)
+		task.spawn(function()
+			local Content = Players:GetUserThumbnailAsync(Player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48)
+			Avatar.Image = Content
+		end)
 
 		-- 4. Nom d'affichage (Gros)
 		local DispName = Instance.new("TextLabel", ProfileFrame)
@@ -280,6 +281,7 @@ function Library:CreateWindow(Config)
 		DispName.Font = Enum.Font.GothamBold
 		DispName.TextSize = 13
 		DispName.TextXAlignment = Enum.TextXAlignment.Left
+		DispName.ZIndex = 11 -- [FIX] Niveau 11 pour être visible
 
 		-- 5. Pseudo @ (Petit et gris)
 		local UserName = Instance.new("TextLabel", ProfileFrame)
@@ -291,15 +293,11 @@ function Library:CreateWindow(Config)
 		UserName.Font = Enum.Font.Gotham
 		UserName.TextSize = 11
 		UserName.TextXAlignment = Enum.TextXAlignment.Left
+		UserName.ZIndex = 11 -- [FIX] Niveau 11 pour être visible
 		
-		-- Petit effet visuel au survol
-		local Scale = Instance.new("UIScale", ProfileFrame)
-		ProfileFrame.MouseEnter:Connect(function()
-			Tween(ProfileFrame, {BackgroundColor3 = Library.Theme.Hover}, 0.2)
-		end)
-		ProfileFrame.MouseLeave:Connect(function()
-			Tween(ProfileFrame, {BackgroundColor3 = Library.Theme.Main}, 0.2)
-		end)
+		-- Animation Survol
+		ProfileFrame.MouseEnter:Connect(function() Tween(ProfileFrame, {BackgroundColor3 = Library.Theme.Hover}) end)
+		ProfileFrame.MouseLeave:Connect(function() Tween(ProfileFrame, {BackgroundColor3 = Library.Theme.Main}) end)
 	end
 	return WindowFuncs
 end
