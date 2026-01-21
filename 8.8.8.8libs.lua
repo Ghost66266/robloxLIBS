@@ -8,38 +8,12 @@ local Library = {}
 local Theme = {
 	Main = Color3.fromRGB(10, 10, 12),
 	Section = Color3.fromRGB(18, 18, 22),
-	Accent = Color3.fromRGB(170, 0, 255),
+	Accent = Color3.fromRGB(170, 0, 255), -- Violet signature
 	Outline = Color3.fromRGB(45, 45, 50),
-	Text = Color3.fromRGB(255, 255, 255),
-	Rainbow = {
-		Color3.fromRGB(255, 0, 0),
-		Color3.fromRGB(255, 170, 0),
-		Color3.fromRGB(255, 255, 0),
-		Color3.fromRGB(0, 255, 0),
-		Color3.fromRGB(0, 255, 255),
-		Color3.fromRGB(0, 170, 255),
-		Color3.fromRGB(170, 0, 255)
-	}
+	Text = Color3.fromRGB(255, 255, 255)
 }
 
--- [[ SYSTÈME D'ANIMATION DE COULEURS ]] --
-local function ApplyRainbow(object)
-	task.spawn(function()
-		local i = 0
-		while object and object.Parent do
-			i = i + 1
-			local color = Color3.fromHSV(tick() % 5 / 5, 1, 1)
-			if object:IsA("UIStroke") then
-				object.Color = color
-			elseif object:IsA("TextLabel") then
-				object.TextColor3 = color
-			end
-			task.wait()
-		end
-	end)
-end
-
--- [[ EFFET RIPPLE AVANCÉ ]] --
+-- [[ EFFET RIPPLE ]] --
 local function CreateRipple(obj)
 	local Mouse = game.Players.LocalPlayer:GetMouse()
 	local Circle = Instance.new("ImageLabel", obj)
@@ -50,7 +24,7 @@ local function CreateRipple(obj)
 	Circle.ZIndex = 10
 	Circle.Position = UDim2.new(0, Mouse.X - obj.AbsolutePosition.X, 0, Mouse.Y - obj.AbsolutePosition.Y)
 	Circle.AnchorPoint = Vector2.new(0.5, 0.5)
-	TS:Create(Circle, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+	TS:Create(Circle, TweenInfo.new(0.5, Enum.EasingStyle.Quart), {
 		Size = UDim2.new(0, obj.AbsoluteSize.X * 2.5, 0, obj.AbsoluteSize.X * 2.5),
 		ImageTransparency = 1
 	}):Play()
@@ -69,10 +43,7 @@ function Library:CreateWelcomeScreen()
 	TextLabel.TextColor3 = Color3.new(1, 1, 1)
 	TextLabel.Font = Enum.Font.GothamBold
 	TextLabel.TextSize = 1
-	
-	TS:Create(TextLabel, TweenInfo.new(1.5, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {TextSize = 90}):Play()
-	ApplyRainbow(TextLabel)
-	
+	TS:Create(TextLabel, TweenInfo.new(1.2, Enum.EasingStyle.Back), {TextSize = 85}):Play()
 	task.delay(4, function()
 		TS:Create(TextLabel, TweenInfo.new(1), {TextTransparency = 1}):Play()
 		Debris:AddItem(WelcomeGui, 1.1)
@@ -80,21 +51,19 @@ function Library:CreateWelcomeScreen()
 end
 
 function Library:CreateWindow(title)
-	if CoreGui:FindFirstChild("8888_Hyper") then CoreGui["8888_Hyper"]:Destroy() end
-
+	if CoreGui:FindFirstChild("8888_UserLib") then CoreGui["8888_UserLib"]:Destroy() end
 	local UI = Instance.new("ScreenGui", CoreGui)
-	UI.Name = "8888_Hyper"
+	UI.Name = "8888_UserLib"
 
 	local Main = Instance.new("Frame", UI)
 	Main.Name = "MainFrame"
 	Main.Size = UDim2.new(0, 520, 0, 380)
 	Main.Position = UDim2.new(0.5, -260, 0.5, -190)
 	Main.BackgroundColor3 = Theme.Main
-	Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 15)
-	
-	local RainbowStroke = Instance.new("UIStroke", Main)
-	RainbowStroke.Thickness = 2
-	ApplyRainbow(RainbowStroke)
+	Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
+	local Stroke = Instance.new("UIStroke", Main)
+	Stroke.Color = Theme.Accent
+	Stroke.Thickness = 2
 
 	local Header = Instance.new("Frame", Main)
 	Header.Name = "Header"
@@ -118,8 +87,7 @@ function Library:CreateWindow(title)
 	Scroll.Size = UDim2.new(1, -20, 1, -80)
 	Scroll.Position = UDim2.new(0, 10, 0, 65)
 	Scroll.BackgroundTransparency = 1
-	Scroll.ScrollBarThickness = 2
-	Scroll.ScrollBarImageColor3 = Theme.Accent
+	Scroll.ScrollBarThickness = 0
 	Scroll.AutomaticCanvasSize = "Y"
 	Instance.new("UIListLayout", Scroll).Padding = UDim.new(0, 12)
 
@@ -131,10 +99,7 @@ function Library:CreateWindow(title)
 		Section.AutomaticSize = "Y"
 		Section.BackgroundColor3 = Theme.Section
 		Instance.new("UICorner", Section)
-		
-		local L = Instance.new("UIListLayout", Section)
-		L.Padding = UDim.new(0, 10)
-		L.HorizontalAlignment = "Center"
+		Instance.new("UIListLayout", Section).Padding = UDim.new(0, 10)
 		Instance.new("UIPadding", Section).PaddingTop = UDim.new(0, 10)
 		Instance.new("UIPadding", Section).PaddingBottom = UDim.new(0, 10)
 
@@ -152,45 +117,11 @@ function Library:CreateWindow(title)
 			Btn.ClipsDescendants = true
 			Btn.AutoButtonColor = false
 			Instance.new("UICorner", Btn)
-			
 			local BStroke = Instance.new("UIStroke", Btn)
 			BStroke.Color = Theme.Outline
-			
 			Btn.MouseEnter:Connect(function() TS:Create(BStroke, TweenInfo.new(0.3), {Color = Theme.Accent}):Play() end)
 			Btn.MouseLeave:Connect(function() TS:Create(BStroke, TweenInfo.new(0.3), {Color = Theme.Outline}):Play() end)
 			Btn.MouseButton1Click:Connect(function() CreateRipple(Btn); callback() end)
-		end
-
-		function SectionActions:AddToggle(text, default, callback)
-			local Tgl = Instance.new("TextButton", Section)
-			Tgl.Size = UDim2.new(0.92, 0, 0, 38)
-			Tgl.BackgroundColor3 = Theme.Main
-			Tgl.Text = "  " .. text
-			Tgl.TextColor3 = Color3.fromRGB(200, 200, 200)
-			Tgl.Font = "GothamMedium"
-			Tgl.TextSize = 14
-			Tgl.TextXAlignment = "Left"
-			Instance.new("UICorner", Tgl)
-
-			local Switch = Instance.new("Frame", Tgl)
-			Switch.Size = UDim2.new(0, 34, 0, 18)
-			Switch.Position = UDim2.new(1, -45, 0.5, -9)
-			Switch.BackgroundColor3 = default and Theme.Accent or Theme.Outline
-			Instance.new("UICorner", Switch).CornerRadius = UDim.new(1, 0)
-			
-			local Dot = Instance.new("Frame", Switch)
-			Dot.Size = UDim2.new(0, 14, 0, 14)
-			Dot.Position = default and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7)
-			Dot.BackgroundColor3 = Color3.new(1,1,1)
-			Instance.new("UICorner", Dot).CornerRadius = UDim.new(1, 0)
-
-			local state = default
-			Tgl.MouseButton1Click:Connect(function()
-				state = not state
-				TS:Create(Switch, TweenInfo.new(0.3), {BackgroundColor3 = state and Theme.Accent or Theme.Outline}):Play()
-				TS:Create(Dot, TweenInfo.new(0.3), {Position = state and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7)}):Play()
-				callback(state)
-			end)
 		end
 
 		function SectionActions:AddSlider(text, min, max, default, callback)
