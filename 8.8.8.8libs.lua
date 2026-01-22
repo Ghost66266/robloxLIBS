@@ -13,7 +13,7 @@ local Library = {
         Main = Color3.fromRGB(25, 25, 25),
         Sidebar = Color3.fromRGB(30, 30, 30),
         Section = Color3.fromRGB(35, 35, 35),
-        Stroke = Color3.fromRGB(60, 60, 60),
+        Stroke = Color3.fromRGB(60, 60, 60), -- Bordure fine grise
         Accent = Color3.fromRGB(119, 56, 255), -- Violet Premium
         Text = Color3.fromRGB(240, 240, 240),
         TextDim = Color3.fromRGB(150, 150, 150)
@@ -49,13 +49,14 @@ end
 
 -- [ 2. CONFIG SYSTEM ] --
 function Library:SaveConfig(Name)
+    if not isfolder("WindConfigs") then makefolder("WindConfigs") end
     local json = HttpService:JSONEncode(Library.Flags)
-    writefile(Name..".json", json)
+    writefile("WindConfigs/"..Name..".json", json)
 end
 
 function Library:LoadConfig(Name)
-    if isfile(Name..".json") then
-        local data = HttpService:JSONDecode(readfile(Name..".json"))
+    if isfile("WindConfigs/"..Name..".json") then
+        local data = HttpService:JSONDecode(readfile("WindConfigs/"..Name..".json"))
         for k,v in pairs(data) do Library.Flags[k] = v end
         return true
     end
@@ -69,21 +70,21 @@ function Library:Window(Config)
     
     local GUI = Create("ScreenGui", {Name = "Eclipse_"..Title, Parent = CoreGui, IgnoreGuiInset = true})
     
-    -- Main Container with Shadow
+    -- Main Container
     local Main = Create("Frame", {
-        Name = "Main", Parent = GUI, Size = UDim2.new(0, 600, 0, 400),
+        Name = "Main", Parent = GUI, Size = UDim2.new(0, 600, 0, 420),
         Position = UDim2.new(0.5, 0, 0.5, 0), AnchorPoint = Vector2.new(0.5, 0.5),
         BackgroundColor3 = Library.Theme.Main, ClipsDescendants = false
     })
-    AddCorner(Main, 8); AddStroke(Main, Library.Theme.Accent, 1)
+    AddCorner(Main, 8); AddStroke(Main, Library.Theme.Accent, 1) -- Bordure Accent autour du menu
     
-    -- Drag Bar (Top)
+    -- Topbar
     local Topbar = Create("Frame", {
         Name = "Topbar", Parent = Main, Size = UDim2.new(1, 0, 0, 40),
         BackgroundColor3 = Library.Theme.Sidebar, BackgroundTransparency = 0
     })
     AddCorner(Topbar, 8); MakeDraggable(Topbar, Main)
-    -- Hack to hide bottom round corners of topbar
+    -- Cache le bas arrondi de la topbar
     Create("Frame", {Parent = Topbar, Size = UDim2.new(1,0,0,5), Position = UDim2.new(0,0,1,-5), BackgroundColor3 = Library.Theme.Sidebar, BorderSizePixel = 0})
 
     Create("TextLabel", {
@@ -96,7 +97,7 @@ function Library:Window(Config)
         Name = "Sidebar", Parent = Main, Size = UDim2.new(0, 160, 1, -40), Position = UDim2.new(0, 0, 0, 40),
         BackgroundColor3 = Library.Theme.Sidebar, BorderSizePixel = 0
     })
-    Create("UICorner", {Parent = Sidebar, CornerRadius = UDim.new(0, 0)}) -- Flat sidebar
+    Create("UICorner", {Parent = Sidebar, CornerRadius = UDim.new(0, 0)})
     
     local TabContainer = Create("ScrollingFrame", {
         Parent = Sidebar, Size = UDim2.new(1, 0, 1, -10), Position = UDim2.new(0, 0, 0, 5),
@@ -130,7 +131,6 @@ function Library:Window(Config)
         Create("UIListLayout", {Parent = Page, Padding = UDim.new(0, 8), SortOrder = "LayoutOrder"})
         Create("UIPadding", {Parent = Page, PaddingTop = UDim.new(0, 5), PaddingLeft = UDim.new(0, 2), PaddingRight = UDim.new(0, 10)})
         
-        -- Auto Resize Canvas
         Page.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
             Page.CanvasSize = UDim2.new(0, 0, 0, Page.UIListLayout.AbsoluteContentSize.Y + 20)
         end)
@@ -253,41 +253,6 @@ function Library:Window(Config)
             UserInputService.InputChanged:Connect(function(i) if Dragging and i.UserInputType == Enum.UserInputType.MouseMovement then Update(i) end end)
         end
         
-        function TabFuncs:Keybind(Text, Flag, Default, Callback)
-            Library.Flags[Flag] = Default or Enum.KeyCode.E
-            local KeyFrame = Create("Frame", {Parent = Page, Size = UDim2.new(1, 0, 0, 36), BackgroundColor3 = Library.Theme.Section})
-            AddCorner(KeyFrame, 6); AddStroke(KeyFrame, Library.Theme.Stroke)
-            
-            Create("TextLabel", {
-                Parent = KeyFrame, Text = Text, Size = UDim2.new(1, -100, 1, 0), Position = UDim2.new(0, 10, 0, 0),
-                BackgroundTransparency = 1, TextColor3 = Library.Theme.Text, Font = Enum.Font.Gotham, TextSize = 13, TextXAlignment = "Left"
-            })
-            
-            local BindBtn = Create("TextButton", {
-                Parent = KeyFrame, Size = UDim2.new(0, 80, 0, 20), Position = UDim2.new(1, -90, 0.5, -10),
-                BackgroundColor3 = Library.Theme.Main, Text = Library.Flags[Flag].Name, TextColor3 = Library.Theme.TextDim, Font = Enum.Font.Code, TextSize = 12
-            })
-            AddCorner(BindBtn, 4)
-            
-            local Listening = false
-            BindBtn.MouseButton1Click:Connect(function()
-                Listening = true; BindBtn.Text = "..."
-                BindBtn.TextColor3 = Library.Theme.Accent
-            end)
-            
-            UserInputService.InputBegan:Connect(function(Input)
-                if Listening and Input.UserInputType == Enum.UserInputType.Keyboard then
-                    Library.Flags[Flag] = Input.KeyCode
-                    BindBtn.Text = Input.KeyCode.Name
-                    BindBtn.TextColor3 = Library.Theme.TextDim
-                    Listening = false
-                    if Callback then Callback(Input.KeyCode) end
-                elseif not Listening and Input.KeyCode == Library.Flags[Flag] then
-                    if Callback then Callback(Library.Flags[Flag]) end
-                end
-            end)
-        end
-
         function TabFuncs:Dropdown(Text, Flag, Items, Callback)
             local DropFrame = Create("Frame", {Parent = Page, Size = UDim2.new(1, 0, 0, 36), BackgroundColor3 = Library.Theme.Section, ClipsDescendants = true})
             AddCorner(DropFrame, 6); AddStroke(DropFrame, Library.Theme.Stroke)
