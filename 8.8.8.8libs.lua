@@ -1,5 +1,5 @@
--- [[ 8.8.8.8 PROJECT | V55 MOBILE & PC ULTIMATE ]] --
--- [[ AUTO-DETECT DEVICE + PLAYER CARD + NO LAG ]] --
+-- [[ 8.8.8.8 PROJECT | V56 MOBILE FIX ]] --
+-- [[ DRAGGABLE BUTTON + FORCED TOUCH DETECTION ]] --
 
 local Services = {
     Players = game:GetService("Players"),
@@ -13,44 +13,37 @@ local Services = {
 local LocalPlayer = Services.Players.LocalPlayer
 local Camera = Services.Workspace.CurrentCamera
 
--- 1. DETECTION INTELLIGENTE (MOBILE VS PC)
-local IsMobile = Services.UserInput.TouchEnabled and not Services.UserInput.KeyboardEnabled
+-- 1. DETECTION FORCEE (Si Touch est actif, c'est Mobile)
+local IsMobile = Services.UserInput.TouchEnabled
 
-if not Drawing then 
-    -- Sécurité pour certains executeurs mobile qui n'ont pas Drawing
-    return warn("Exploit not supported (Missing Drawing Lib)") 
-end
+if not Drawing then return warn("Exploit not supported") end
 
--- --- CONFIGURATION (SETTINGS) ---
+-- --- CONFIGURATION ---
 local Settings = {
-    -- COMBAT
     Aimbot = false,
     AimPart = "Head",
     Sensitivity = 3,
-    -- Adaptation automatique de la touche : Taper (Mobile) ou Clic Droit (PC)
+    -- Si mobile, on vise en tapant. Sinon clic droit.
     AimKey = IsMobile and Enum.UserInputType.MouseButton1 or Enum.UserInputType.MouseButton2,
     
-    -- VISUALS
     ESP_Enabled = true,
     ESP_Box = true,         
     ESP_Skeleton = true,    
     ESP_Snaplines = false,   
     ESP_Names = true,       
     ESP_HealthBar = true,
-    ESP_DistLimit = 1500, -- Optimisation distance
+    ESP_DistLimit = 1500,
     
     ESP_Color = Color3.fromRGB(255, 60, 60),
     TeamCheck = true,
 
-    -- WORLD / MISC
     CameraFOV = 100,
     EnableFOVChange = false,
     Crosshair = false,
 
-    -- UI SETTINGS
     ShowWatermark = true,
     ShowFOV = true,
-    FOV_Radius = IsMobile and 130 or 150 -- Rayon plus petit sur mobile
+    FOV_Radius = IsMobile and 130 or 150
 }
 
 -- --- UI LIBRARY ---
@@ -58,7 +51,7 @@ local Library = {}
 local UIConfig = {
     Main = Color3.fromRGB(25, 25, 30),
     Sidebar = Color3.fromRGB(30, 30, 35),
-    Accent = Color3.fromRGB(0, 140, 255), -- Bleu Cyber
+    Accent = Color3.fromRGB(0, 140, 255),
     Text = Color3.fromRGB(240, 240, 240),
     TextDark = Color3.fromRGB(150, 150, 150),
     Item = Color3.fromRGB(40, 40, 45)
@@ -75,19 +68,40 @@ function Library:Create(class, props)
     return inst
 end
 
+function Library:MakeDraggable(gui)
+    local dragging, dragInput, dragStart, startPos
+    gui.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true; dragStart = input.Position; startPos = gui.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+            end)
+        end
+    end)
+    gui.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+    Services.UserInput.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            gui.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+end
+
 function Library:CreateWindow()
-    if Services.CoreGui:FindFirstChild("Project8888_V55") then Services.CoreGui.Project8888_V55:Destroy() end
+    if Services.CoreGui:FindFirstChild("Project8888_V56") then Services.CoreGui.Project8888_V56:Destroy() end
     
-    local Screen = Library:Create("ScreenGui", {Name = "Project8888_V55", Parent = Services.CoreGui, ResetOnSpawn = false})
+    local Screen = Library:Create("ScreenGui", {Name = "Project8888_V56", Parent = Services.CoreGui, ResetOnSpawn = false, DisplayOrder = 10000}) -- ZIndex Max
     
-    -- TAILLE ADAPTATIVE
-    -- Mobile : Plus compact (340x300) | PC : Large (550x400)
-    local WinSize = IsMobile and UDim2.new(0, 340, 0, 300) or UDim2.new(0, 550, 0, 400)
+    local WinSize = IsMobile and UDim2.new(0, 340, 0, 320) or UDim2.new(0, 550, 0, 400)
     
     local Main = Library:Create("Frame", {
         Parent = Screen, Size = WinSize, Position = UDim2.new(0.5,0,0.5,0), 
         AnchorPoint = Vector2.new(0.5,0.5), BackgroundColor3 = UIConfig.Main, 
-        ClipsDescendants = true, Active = true, Draggable = true
+        ClipsDescendants = true, Active = true, Draggable = true, Visible = false -- Caché par défaut
     })
     Library:Create("UICorner", {Parent = Main, CornerRadius = UDim.new(0, 10)})
     Library:Create("UIStroke", {Parent = Main, Color = Color3.fromRGB(50,50,55), Thickness = 1})
@@ -97,55 +111,42 @@ function Library:CreateWindow()
     Library:Create("UICorner", {Parent = Sidebar, CornerRadius = UDim.new(0, 10)})
     Library:Create("Frame", {Parent = Sidebar, Size = UDim2.new(0, 10, 1, 0), Position = UDim2.new(1,-10,0,0), BackgroundColor3 = UIConfig.Sidebar, BorderSizePixel=0})
     
-    -- Title: 8.8.8.8 HUB
     local Title = Library:Create("TextLabel", {Parent = Sidebar, Text = "8.8.8.8", Size = UDim2.new(1, 0, 0, 40), BackgroundTransparency = 1, Font = Enum.Font.GothamBlack, TextSize = 20, TextColor3 = UIConfig.Accent, Position = UDim2.new(0,0,0,10)})
-    Library:Create("TextLabel", {Parent = Title, Text = "HUB V55", Size = UDim2.new(1, 0, 0, 15), Position = UDim2.new(0,0,0.8,0), BackgroundTransparency = 1, Font = Enum.Font.Gotham, TextSize = 10, TextColor3 = UIConfig.TextDark})
+    Library:Create("TextLabel", {Parent = Title, Text = "HUB V56", Size = UDim2.new(1, 0, 0, 15), Position = UDim2.new(0,0,0.8,0), BackgroundTransparency = 1, Font = Enum.Font.Gotham, TextSize = 10, TextColor3 = UIConfig.TextDark})
 
-    -- Containers
     local TabContainer = Library:Create("Frame", {Parent = Sidebar, Size = UDim2.new(1, 0, 1, -60), Position = UDim2.new(0, 0, 0, 60), BackgroundTransparency = 1})
     Library:Create("UIListLayout", {Parent = TabContainer, SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 5)})
     local PagesContainer = Library:Create("Frame", {Parent = Main, Size = UDim2.new(1, -120, 1, -20), Position = UDim2.new(0, 120, 0, 10), BackgroundTransparency = 1})
 
-    -- PLAYER CARD (Bas Gauche)
+    -- PLAYER CARD
     local Card = Library:Create("Frame", {
         Parent = Screen, Size = UDim2.new(0, 200, 0, 50), Position = UDim2.new(0, 10, 1, -60),
         BackgroundColor3 = UIConfig.Main, BackgroundTransparency = 0.1, Visible = Settings.ShowWatermark
     })
     Library:Create("UICorner", {Parent = Card, CornerRadius = UDim.new(0, 8)})
     Library:Create("UIStroke", {Parent = Card, Color = UIConfig.Item, Thickness = 1})
+    local Avatar = Library:Create("ImageLabel", {Parent = Card, Size = UDim2.new(0, 30, 0, 30), Position = UDim2.new(0, 10, 0.5, -15), BackgroundColor3 = UIConfig.Item, Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"}); Library:Create("UICorner", {Parent = Avatar, CornerRadius = UDim.new(1, 0)})
+    task.spawn(function() local c, r = Services.Players:GetUserThumbnailAsync(LocalPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48); if r then Avatar.Image = c end end)
+    Library:Create("TextLabel", {Parent = Card, Text = LocalPlayer.DisplayName, Size = UDim2.new(1, -50, 0, 20), Position = UDim2.new(0, 50, 0, 5), BackgroundTransparency = 1, Font = Enum.Font.GothamBold, TextColor3 = UIConfig.Text, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left})
+    Library:Create("TextLabel", {Parent = Card, Text = "@" .. LocalPlayer.Name, Size = UDim2.new(1, -50, 0, 15), Position = UDim2.new(0, 50, 0, 25), BackgroundTransparency = 1, Font = Enum.Font.Gotham, TextColor3 = UIConfig.TextDark, TextSize = 11, TextXAlignment = Enum.TextXAlignment.Left})
 
-    local Avatar = Library:Create("ImageLabel", {
-        Parent = Card, Size = UDim2.new(0, 30, 0, 30), Position = UDim2.new(0, 10, 0.5, -15),
-        BackgroundColor3 = UIConfig.Item, Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
-    })
-    Library:Create("UICorner", {Parent = Avatar, CornerRadius = UDim.new(1, 0)})
-    
-    task.spawn(function()
-        local content, isReady = Services.Players:GetUserThumbnailAsync(LocalPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48)
-        if isReady then Avatar.Image = content end
-    end)
-
-    Library:Create("TextLabel", {
-        Parent = Card, Text = LocalPlayer.DisplayName, Size = UDim2.new(1, -50, 0, 20), Position = UDim2.new(0, 50, 0, 5),
-        BackgroundTransparency = 1, Font = Enum.Font.GothamBold, TextColor3 = UIConfig.Text, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left
-    })
-    Library:Create("TextLabel", {
-        Parent = Card, Text = "@" .. LocalPlayer.Name, Size = UDim2.new(1, -50, 0, 15), Position = UDim2.new(0, 50, 0, 25),
-        BackgroundTransparency = 1, Font = Enum.Font.Gotham, TextColor3 = UIConfig.TextDark, TextSize = 11, TextXAlignment = Enum.TextXAlignment.Left
-    })
-
-    -- BOUTON MOBILE / TOUCHE PC
+    -- 2. BOUTON MOBILE (FIXÉ & DÉPLAÇABLE)
     if IsMobile then
-        -- Bouton Rouage Tactile
         local MobBtn = Library:Create("TextButton", {
-            Parent = Screen, Text = "⚙", Size = UDim2.new(0, 45, 0, 45), Position = UDim2.new(0, 10, 0, 10),
-            BackgroundColor3 = UIConfig.Main, TextColor3 = UIConfig.Accent, Font = Enum.Font.GothamBold, TextSize = 24
+            Parent = Screen, Text = "⚙", Size = UDim2.new(0, 50, 0, 50), 
+            Position = UDim2.new(0, 20, 0, 50), -- Position sûre
+            BackgroundColor3 = UIConfig.Main, TextColor3 = UIConfig.Accent, 
+            Font = Enum.Font.GothamBold, TextSize = 26, ZIndex = 1000 -- Toujours devant
         })
-        Library:Create("UICorner", {Parent = MobBtn, CornerRadius = UDim.new(1,0)})
+        Library:Create("UICorner", {Parent = MobBtn, CornerRadius = UDim.new(1,0)}) -- Rond parfait
         Library:Create("UIStroke", {Parent = MobBtn, Color = UIConfig.Accent, Thickness = 2})
+        
+        -- Rendre le bouton déplaçable
+        Library:MakeDraggable(MobBtn)
+        
         MobBtn.MouseButton1Click:Connect(function() Main.Visible = not Main.Visible end)
     else
-        -- Touche Insert
+        Main.Visible = true -- Sur PC on affiche direct
         Services.UserInput.InputBegan:Connect(function(i,p) if not p and i.KeyCode == Enum.KeyCode.Insert then Main.Visible = not Main.Visible end end)
     end
     
@@ -154,34 +155,25 @@ end
 
 local Window = Library:CreateWindow()
 
--- Fonctions de la Lib UI (Tabs, Toggles, Sliders)
 function Library:AddTab(Name)
     local Page = Library:Create("ScrollingFrame", {Parent = Window.Pages, Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1, ScrollBarThickness = 2, Visible = false, AutomaticCanvasSize = Enum.AutomaticSize.Y, CanvasSize = UDim2.new(0,0,0,0)})
     Library:Create("UIListLayout", {Parent = Page, SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 8)})
     Library:Create("UIPadding", {Parent = Page, PaddingTop = UDim.new(0,5), PaddingLeft = UDim.new(0,5)})
-    
-    local Btn = Library:Create("TextButton", {Parent = Window.Tabs, Size = UDim2.new(1, -10, 0, 35), BackgroundColor3 = UIConfig.Sidebar, Text = Name, Font = Enum.Font.GothamBold, TextColor3 = UIConfig.TextDark, TextSize = 12, AutoButtonColor = false})
-    Library:Create("UICorner", {Parent = Btn, CornerRadius = UDim.new(0, 6)})
-    
+    local Btn = Library:Create("TextButton", {Parent = Window.Tabs, Size = UDim2.new(1, -10, 0, 35), BackgroundColor3 = UIConfig.Sidebar, Text = Name, Font = Enum.Font.GothamBold, TextColor3 = UIConfig.TextDark, TextSize = 12, AutoButtonColor = false}); Library:Create("UICorner", {Parent = Btn, CornerRadius = UDim.new(0, 6)})
     local function Activate()
         for _, v in pairs(Window.Pages:GetChildren()) do v.Visible = false end
         for _, v in pairs(Window.Tabs:GetChildren()) do if v:IsA("TextButton") then Library:Tween(v, {TextColor3 = UIConfig.TextDark, BackgroundTransparency = 1}) end end
         Page.Visible = true; Library:Tween(Btn, {TextColor3 = UIConfig.Accent, BackgroundTransparency = 0.9})
     end
-    Btn.MouseButton1Click:Connect(Activate)
-    if #Window.Tabs:GetChildren() == 2 then Activate() end
+    Btn.MouseButton1Click:Connect(Activate); if #Window.Tabs:GetChildren() == 2 then Activate() end
     return Page
 end
 
 function Library:AddToggle(Page, Text, Flag, Callback)
-    local Container = Library:Create("TextButton", {Parent = Page, Size = UDim2.new(1, -10, 0, 40), BackgroundColor3 = UIConfig.Item, Text = "", AutoButtonColor = false})
-    Library:Create("UICorner", {Parent = Container, CornerRadius = UDim.new(0, 6)})
+    local Container = Library:Create("TextButton", {Parent = Page, Size = UDim2.new(1, -10, 0, 40), BackgroundColor3 = UIConfig.Item, Text = "", AutoButtonColor = false}); Library:Create("UICorner", {Parent = Container, CornerRadius = UDim.new(0, 6)})
     Library:Create("TextLabel", {Parent = Container, Text = Text, Size = UDim2.new(1, -60, 1, 0), Position = UDim2.new(0, 15, 0, 0), BackgroundTransparency = 1, Font = Enum.Font.GothamSemibold, TextColor3 = UIConfig.Text, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left})
-    local SwitchBg = Library:Create("Frame", {Parent = Container, Size = UDim2.new(0, 40, 0, 20), Position = UDim2.new(1, -50, 0.5, -10), BackgroundColor3 = Color3.fromRGB(60, 60, 65)})
-    Library:Create("UICorner", {Parent = SwitchBg, CornerRadius = UDim.new(1, 0)})
-    local Dot = Library:Create("Frame", {Parent = SwitchBg, Size = UDim2.new(0, 16, 0, 16), Position = UDim2.new(0, 2, 0.5, -8), BackgroundColor3 = Color3.fromRGB(255, 255, 255)})
-    Library:Create("UICorner", {Parent = Dot, CornerRadius = UDim.new(1, 0)})
-    
+    local SwitchBg = Library:Create("Frame", {Parent = Container, Size = UDim2.new(0, 40, 0, 20), Position = UDim2.new(1, -50, 0.5, -10), BackgroundColor3 = Color3.fromRGB(60, 60, 65)}); Library:Create("UICorner", {Parent = SwitchBg, CornerRadius = UDim.new(1, 0)})
+    local Dot = Library:Create("Frame", {Parent = SwitchBg, Size = UDim2.new(0, 16, 0, 16), Position = UDim2.new(0, 2, 0.5, -8), BackgroundColor3 = Color3.fromRGB(255, 255, 255)}); Library:Create("UICorner", {Parent = Dot, CornerRadius = UDim.new(1, 0)})
     local function Update()
         if Settings[Flag] then Library:Tween(SwitchBg, {BackgroundColor3 = UIConfig.Accent}); Library:Tween(Dot, {Position = UDim2.new(1, -18, 0.5, -8)})
         else Library:Tween(SwitchBg, {BackgroundColor3 = Color3.fromRGB(60, 60, 65)}); Library:Tween(Dot, {Position = UDim2.new(0, 2, 0.5, -8)}) end
@@ -197,17 +189,15 @@ function Library:AddSlider(Page, Text, Flag, Min, Max)
     local BarBg = Library:Create("Frame", {Parent = Container, Size = UDim2.new(1, -30, 0, 4), Position = UDim2.new(0, 15, 0, 35), BackgroundColor3 = Color3.fromRGB(60, 60, 65)}); Library:Create("UICorner", {Parent = BarBg, CornerRadius = UDim.new(1, 0)})
     local Fill = Library:Create("Frame", {Parent = BarBg, Size = UDim2.new((Settings[Flag]-Min)/(Max-Min), 0, 1, 0), BackgroundColor3 = UIConfig.Accent}); Library:Create("UICorner", {Parent = Fill, CornerRadius = UDim.new(1, 0)})
     local Trig = Library:Create("TextButton", {Parent = Container, Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1, Text = ""})
-    
     local function Move(Input)
         local P = math.clamp((Input.Position.X - BarBg.AbsolutePosition.X) / BarBg.AbsoluteSize.X, 0, 1)
         local V = math.floor(Min + ((Max - Min) * P))
         Settings[Flag] = V; Val.Text = tostring(V); Library:Tween(Fill, {Size = UDim2.new(P, 0, 1, 0)}, 0.05)
     end
-    -- Support Tactile + Souris
     Trig.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then Move(i); local c; c=Services.UserInput.InputChanged:Connect(function(io) if io.UserInputType==Enum.UserInputType.MouseMovement or io.UserInputType==Enum.UserInputType.Touch then Move(io) end end); local r; r=Services.UserInput.InputEnded:Connect(function(io) if io.UserInputType==Enum.UserInputType.MouseButton1 or io.UserInputType==Enum.UserInputType.Touch then c:Disconnect(); r:Disconnect() end end) end end)
 end
 
--- --- CONSTRUCTION DU MENU ---
+-- MENU CONSTRUCTION
 local TabCombat = Library:AddTab("Combat")
 Library:AddToggle(TabCombat, "Enabled", "Aimbot")
 Library:AddSlider(TabCombat, "Smoothness", "Sensitivity", 1, 15)
@@ -232,7 +222,7 @@ Library:AddToggle(TabSettings, "Player Card", "ShowWatermark", function(v) Windo
 Library:AddToggle(TabSettings, "Show Radius", "ShowFOV")
 Library:AddSlider(TabSettings, "Radius Size", "FOV_Radius", 50, 500)
 
--- --- MOTEUR (V51 OPTIMISÉ) ---
+-- ENGINE V51
 local Cache = {}
 local CrosshairX = Drawing.new("Line"); local CrosshairY = Drawing.new("Line")
 
@@ -261,129 +251,74 @@ Services.Players.PlayerAdded:Connect(AddToCache)
 Services.Players.PlayerRemoving:Connect(RemoveFromCache)
 
 local function GetParts(Player)
-    local Char = Player.Character
-    if not Char then return nil, nil, nil end
+    local Char = Player.Character; if not Char then return nil, nil, nil end
     return Char:FindFirstChild("Head"), Char:FindFirstChild("HumanoidRootPart") or Char:FindFirstChild("Torso"), Char:FindFirstChild("Humanoid")
 end
-
 local function IsAlly(Player)
     if not Settings.TeamCheck then return false end
     return Player.Team == LocalPlayer.Team
 end
 
--- RENDER
 local FOV_Circle = Drawing.new("Circle"); FOV_Circle.Filled=false; FOV_Circle.Thickness=1; FOV_Circle.Color=Color3.new(1,1,1)
 
 Services.RunService.RenderStepped:Connect(function()
-    local Mouse = Services.UserInput:GetMouseLocation()
-    local ScreenSize = Camera.ViewportSize
+    local Mouse = Services.UserInput:GetMouseLocation(); local ScreenSize = Camera.ViewportSize
     
-    -- CROSSHAIR
     if Settings.Crosshair then
         CrosshairX.Visible = true; CrosshairY.Visible = true
-        CrosshairX.From = Vector2.new(ScreenSize.X/2 - 8, ScreenSize.Y/2); CrosshairX.To = Vector2.new(ScreenSize.X/2 + 8, ScreenSize.Y/2)
-        CrosshairY.From = Vector2.new(ScreenSize.X/2, ScreenSize.Y/2 - 8); CrosshairY.To = Vector2.new(ScreenSize.X/2, ScreenSize.Y/2 + 8)
-        CrosshairX.Color = Color3.new(1,0,0); CrosshairY.Color = Color3.new(1,0,0)
+        CrosshairX.From = Vector2.new(ScreenSize.X/2 - 8, ScreenSize.Y/2); CrosshairX.To = Vector2.new(ScreenSize.X/2 + 8, ScreenSize.Y/2); CrosshairX.Color = Color3.new(1,0,0)
+        CrosshairY.From = Vector2.new(ScreenSize.X/2, ScreenSize.Y/2 - 8); CrosshairY.To = Vector2.new(ScreenSize.X/2, ScreenSize.Y/2 + 8); CrosshairY.Color = Color3.new(1,0,0)
     else CrosshairX.Visible = false; CrosshairY.Visible = false end
 
     if Settings.EnableFOVChange then Camera.FieldOfView = Settings.CameraFOV end
-
     FOV_Circle.Visible = Settings.ShowFOV; FOV_Circle.Radius = Settings.FOV_Radius; FOV_Circle.Position = Mouse
-    
-    local Target = nil
-    local MinDist = Settings.FOV_Radius
+    local Target = nil; local MinDist = Settings.FOV_Radius
 
     for Player, Draw in pairs(Cache) do
         local Head, Root, Hum = GetParts(Player)
-        
-        -- Verification de base
         if not Head or not Root or not Hum or Hum.Health <= 0 then
-            Draw.Box.Visible=false; Draw.Snap.Visible=false; Draw.Name.Visible=false; Draw.HPBg.Visible=false; Draw.HP.Visible=false
-            for _,L in pairs(Draw.Skeleton) do L.Visible=false end
-            continue
+            Draw.Box.Visible=false; Draw.Snap.Visible=false; Draw.Name.Visible=false; Draw.HPBg.Visible=false; Draw.HP.Visible=false; for _,L in pairs(Draw.Skeleton) do L.Visible=false end; continue
         end
-
-        local Pos, OnScreen = Camera:WorldToViewportPoint(Root.Position)
-        local Dist = (Camera.CFrame.Position - Root.Position).Magnitude
-
-        -- Optimization distance
+        local Pos, OnScreen = Camera:WorldToViewportPoint(Root.Position); local Dist = (Camera.CFrame.Position - Root.Position).Magnitude
         if not OnScreen or Dist > Settings.ESP_DistLimit then
-            Draw.Box.Visible=false; Draw.Snap.Visible=false; Draw.Name.Visible=false; Draw.HPBg.Visible=false; Draw.HP.Visible=false
-            for _,L in pairs(Draw.Skeleton) do L.Visible=false end
-            continue
+            Draw.Box.Visible=false; Draw.Snap.Visible=false; Draw.Name.Visible=false; Draw.HPBg.Visible=false; Draw.HP.Visible=false; for _,L in pairs(Draw.Skeleton) do L.Visible=false end; continue
         end
 
-        local Teammate = IsAlly(Player)
-        local ShouldDraw = Settings.ESP_Enabled and not Teammate
-        local Color = Settings.ESP_Color
-
+        local ShouldDraw = Settings.ESP_Enabled and not IsAlly(Player)
         if ShouldDraw then
-            local H = (3000 / Dist) * 1.5; local W = H * 0.6
-            local BoxPos = Vector2.new(Pos.X - W/2, Pos.Y - H/2)
-
-            if Settings.ESP_Box then
-                Draw.Box.Visible=true; Draw.Box.Size=Vector2.new(W,H); Draw.Box.Position=BoxPos; Draw.Box.Color=Color
-            else Draw.Box.Visible=false end
-
-            if Settings.ESP_Snaplines then
-                Draw.Snap.Visible=true; Draw.Snap.From=Vector2.new(ScreenSize.X/2, ScreenSize.Y); Draw.Snap.To=Vector2.new(Pos.X, Pos.Y + H/2); Draw.Snap.Color=Color
-            else Draw.Snap.Visible=false end
-
-            if Settings.ESP_Names then
-                Draw.Name.Visible=true; Draw.Name.Text=Player.Name; Draw.Name.Position=Vector2.new(Pos.X, BoxPos.Y - 16)
-            else Draw.Name.Visible=false end
-
-            if Settings.ESP_HealthBar then
-                Draw.HPBg.Visible=true; Draw.HPBg.Size=Vector2.new(3, H); Draw.HPBg.Position=Vector2.new(BoxPos.X - 5, BoxPos.Y)
-                local HealthY = H * (Hum.Health / Hum.MaxHealth)
-                Draw.HP.Visible=true; Draw.HP.Size=Vector2.new(3, HealthY); Draw.HP.Position=Vector2.new(BoxPos.X - 5, BoxPos.Y + (H - HealthY))
-            else Draw.HPBg.Visible=false; Draw.HP.Visible=false end
-
+            local H = (3000 / Dist) * 1.5; local W = H * 0.6; local BoxPos = Vector2.new(Pos.X - W/2, Pos.Y - H/2)
+            if Settings.ESP_Box then Draw.Box.Visible=true; Draw.Box.Size=Vector2.new(W,H); Draw.Box.Position=BoxPos; Draw.Box.Color=Settings.ESP_Color else Draw.Box.Visible=false end
+            if Settings.ESP_Snaplines then Draw.Snap.Visible=true; Draw.Snap.From=Vector2.new(ScreenSize.X/2, ScreenSize.Y); Draw.Snap.To=Vector2.new(Pos.X, Pos.Y + H/2); Draw.Snap.Color=Settings.ESP_Color else Draw.Snap.Visible=false end
+            if Settings.ESP_Names then Draw.Name.Visible=true; Draw.Name.Text=Player.Name; Draw.Name.Position=Vector2.new(Pos.X, BoxPos.Y - 16) else Draw.Name.Visible=false end
+            if Settings.ESP_HealthBar then Draw.HPBg.Visible=true; Draw.HPBg.Size=Vector2.new(3, H); Draw.HPBg.Position=Vector2.new(BoxPos.X - 5, BoxPos.Y); local HY = H * (Hum.Health / Hum.MaxHealth); Draw.HP.Visible=true; Draw.HP.Size=Vector2.new(3, HY); Draw.HP.Position=Vector2.new(BoxPos.X - 5, BoxPos.Y + (H - HY)) else Draw.HPBg.Visible=false; Draw.HP.Visible=false end
+            
             if Settings.ESP_Skeleton and Dist < 300 then
                 local function Line(Idx, P1, P2)
                     local L = Draw.Skeleton[Idx]; if not L then return end
                     local V1, S1 = Camera:WorldToViewportPoint(P1.Position); local V2, S2 = Camera:WorldToViewportPoint(P2.Position)
-                    if S1 and S2 then L.Visible=true; L.From=Vector2.new(V1.X,V1.Y); L.To=Vector2.new(V2.X,V2.Y); L.Color=Color else L.Visible=false end
+                    if S1 and S2 then L.Visible=true; L.From=Vector2.new(V1.X,V1.Y); L.To=Vector2.new(V2.X,V2.Y); L.Color=Settings.ESP_Color else L.Visible=false end
                 end
-                
                 local Char = Player.Character; local T = Char:FindFirstChild("UpperTorso") or Char:FindFirstChild("Torso")
                 if T then
-                    Line(1, Head, T)
-                    local LA, RA = Char:FindFirstChild("LeftUpperArm") or Char:FindFirstChild("Left Arm"), Char:FindFirstChild("RightUpperArm") or Char:FindFirstChild("Right Arm")
-                    local LL, RL = Char:FindFirstChild("LeftUpperLeg") or Char:FindFirstChild("Left Leg"), Char:FindFirstChild("RightUpperLeg") or Char:FindFirstChild("Right Leg")
-                    if LA then Line(2, T, LA) end; if RA then Line(3, T, RA) end
-                    if LL then Line(4, T, LL) end; if RL then Line(5, T, RL) end
+                    Line(1, Head, T); local LA = Char:FindFirstChild("LeftUpperArm") or Char:FindFirstChild("Left Arm"); local RA = Char:FindFirstChild("RightUpperArm") or Char:FindFirstChild("Right Arm"); local LL = Char:FindFirstChild("LeftUpperLeg") or Char:FindFirstChild("Left Leg"); local RL = Char:FindFirstChild("RightUpperLeg") or Char:FindFirstChild("Right Leg")
+                    if LA then Line(2, T, LA) end; if RA then Line(3, T, RA) end; if LL then Line(4, T, LL) end; if RL then Line(5, T, RL) end
                 end
             else for _,L in pairs(Draw.Skeleton) do L.Visible=false end end
 
             if Settings.Aimbot then
-                local HeadPos = Camera:WorldToViewportPoint(Head.Position)
-                local DistToMouse = (Vector2.new(HeadPos.X, HeadPos.Y) - Mouse).Magnitude
+                local HeadPos = Camera:WorldToViewportPoint(Head.Position); local DistToMouse = (Vector2.new(HeadPos.X, HeadPos.Y) - Mouse).Magnitude
                 if DistToMouse < MinDist then MinDist = DistToMouse; Target = Head end
             end
         else
-            Draw.Box.Visible=false; Draw.Snap.Visible=false; Draw.Name.Visible=false; Draw.HPBg.Visible=false; Draw.HP.Visible=false
-            for _,L in pairs(Draw.Skeleton) do L.Visible=false end
+            Draw.Box.Visible=false; Draw.Snap.Visible=false; Draw.Name.Visible=false; Draw.HPBg.Visible=false; Draw.HP.Visible=false; for _,L in pairs(Draw.Skeleton) do L.Visible=false end
         end
     end
 
-    if Target and Services.UserInput:IsMouseButtonPressed(Settings.AimKey) then
+    if Target and Services.UserInput:IsMouseButtonPressed(Settings.AimKey) and mousemoverel then
         local Pos = Camera:WorldToViewportPoint(Target.Position)
-        -- Protection si mousemoverel n'existe pas
-        if mousemoverel then
-            mousemoverel((Pos.X - Mouse.X)/Settings.Sensitivity, (Pos.Y - Mouse.Y)/Settings.Sensitivity)
-        end
+        mousemoverel((Pos.X - Mouse.X)/Settings.Sensitivity, (Pos.Y - Mouse.Y)/Settings.Sensitivity)
     end
 end)
 
-Services.CoreGui.ChildRemoved:Connect(function(c) 
-    if c.Name=="Project8888_V55" then 
-        FOV_Circle:Remove(); CrosshairX:Remove(); CrosshairY:Remove(); 
-        for _, D in pairs(Cache) do RemoveDrawings(D) end 
-    end 
-end)
-
-pcall(function() 
-    local Platform = IsMobile and "MOBILE" or "PC"
-    Services.StarterGui:SetCore("SendNotification", {Title="8.8.8.8 V55", Text="Ready on "..Platform, Duration=3}) 
-end)
+Services.CoreGui.ChildRemoved:Connect(function(c) if c.Name=="Project8888_V56" then FOV_Circle:Remove(); CrosshairX:Remove(); CrosshairY:Remove(); for _, D in pairs(Cache) do RemoveDrawings(D) end end end)
+pcall(function() local P=IsMobile and "MOBILE" or "PC"; Services.StarterGui:SetCore("SendNotification", {Title="8.8.8.8 V56", Text="Ready on "..P, Duration=3}) end)
