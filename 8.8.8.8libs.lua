@@ -1,5 +1,5 @@
--- [[ 8.8.8.8 PROJECT | V59 MOBILE CENTER LOCK ]] --
--- [[ MOBILE: FOV LOCKED TO CENTER | PC: MOUSE ]] --
+-- [[ 8.8.8.8 PROJECT | V60 AUTO-RAGE MOBILE ]] --
+-- [[ MOBILE: FULL AUTO AIM & SHOOT | PC: MANUAL ]] --
 
 local Services = {
     Players = game:GetService("Players"),
@@ -20,10 +20,12 @@ if not Drawing then return warn("Exploit not supported") end
 
 -- --- CONFIGURATION ---
 local Settings = {
-    Aimbot = false,
-    AimPart = "Head",
-    Sensitivity = 3,
-    AimKey = IsMobile and Enum.UserInputType.MouseButton1 or Enum.UserInputType.MouseButton2,
+    Aimbot = false,         -- Activer pour que ça tire tout seul
+    AimPart = "Head",       -- Vise la Tête
+    Sensitivity = 1,        -- 1 = Instantané (Rage), 5 = Smooth (Legit)
+    
+    -- PC : Clic Droit | MOBILE : Pas besoin de touche (Automatique)
+    AimKey = Enum.UserInputType.MouseButton2,
     
     ESP_Enabled = true,
     ESP_Box = true,         
@@ -33,7 +35,7 @@ local Settings = {
     ESP_HealthBar = true,
     ESP_DistLimit = 1500,
     
-    ESP_Color = Color3.fromRGB(255, 60, 60),
+    ESP_Color = Color3.fromRGB(255, 50, 50),
     TeamCheck = true,
 
     CameraFOV = 100,
@@ -42,10 +44,10 @@ local Settings = {
 
     ShowWatermark = true,
     ShowFOV = true,
-    FOV_Radius = IsMobile and 100 or 150
+    FOV_Radius = IsMobile and 150 or 150 -- Rayon de détection
 }
 
--- --- UI LIBRARY ---
+-- --- UI LIBRARY (STANDARD V59 BASE) ---
 local Library = {}
 local UIConfig = {Main = Color3.fromRGB(25, 25, 30), Sidebar = Color3.fromRGB(30, 30, 35), Accent = Color3.fromRGB(0, 140, 255), Text = Color3.fromRGB(240, 240, 240), TextDark = Color3.fromRGB(150, 150, 150), Item = Color3.fromRGB(40, 40, 45)}
 
@@ -60,18 +62,18 @@ function Library:MakeDraggable(gui)
 end
 
 function Library:CreateWindow()
-    if Services.CoreGui:FindFirstChild("Project8888_V59") then Services.CoreGui.Project8888_V59:Destroy() end
-    local Screen = Library:Create("ScreenGui", {Name = "Project8888_V59", Parent = Services.CoreGui, ResetOnSpawn = false, DisplayOrder = 10000})
+    if Services.CoreGui:FindFirstChild("Project8888_V60") then Services.CoreGui.Project8888_V60:Destroy() end
+    local Screen = Library:Create("ScreenGui", {Name = "Project8888_V60", Parent = Services.CoreGui, ResetOnSpawn = false, DisplayOrder = 10000})
     
     local WinSize = IsMobile and UDim2.new(0, 340, 0, 320) or UDim2.new(0, 550, 0, 400)
     local Main = Library:Create("Frame", {Parent = Screen, Size = WinSize, Position = UDim2.new(0.5,0,0.5,0), AnchorPoint = Vector2.new(0.5,0.5), BackgroundColor3 = UIConfig.Main, ClipsDescendants = true, Active = true, Draggable = true})
-    Main.Visible = not IsMobile
+    Main.Visible = not IsMobile -- Mobile ouvre avec le bouton
     Library:Create("UICorner", {Parent = Main, CornerRadius = UDim.new(0, 10)}); Library:Create("UIStroke", {Parent = Main, Color = Color3.fromRGB(50,50,55), Thickness = 1})
 
     local Sidebar = Library:Create("Frame", {Parent = Main, Size = UDim2.new(0, 110, 1, 0), BackgroundColor3 = UIConfig.Sidebar, BorderSizePixel = 0}); Library:Create("UICorner", {Parent = Sidebar, CornerRadius = UDim.new(0, 10)})
     Library:Create("Frame", {Parent = Sidebar, Size = UDim2.new(0, 10, 1, 0), Position = UDim2.new(1,-10,0,0), BackgroundColor3 = UIConfig.Sidebar, BorderSizePixel=0})
     local Title = Library:Create("TextLabel", {Parent = Sidebar, Text = "8.8.8.8", Size = UDim2.new(1, 0, 0, 40), BackgroundTransparency = 1, Font = Enum.Font.GothamBlack, TextSize = 20, TextColor3 = UIConfig.Accent, Position = UDim2.new(0,0,0,10)})
-    Library:Create("TextLabel", {Parent = Title, Text = "HUB V59", Size = UDim2.new(1, 0, 0, 15), Position = UDim2.new(0,0,0.8,0), BackgroundTransparency = 1, Font = Enum.Font.Gotham, TextSize = 10, TextColor3 = UIConfig.TextDark})
+    Library:Create("TextLabel", {Parent = Title, Text = "HUB V60", Size = UDim2.new(1, 0, 0, 15), Position = UDim2.new(0,0,0.8,0), BackgroundTransparency = 1, Font = Enum.Font.Gotham, TextSize = 10, TextColor3 = UIConfig.TextDark})
 
     local TabContainer = Library:Create("Frame", {Parent = Sidebar, Size = UDim2.new(1, 0, 1, -60), Position = UDim2.new(0, 0, 0, 60), BackgroundTransparency = 1}); Library:Create("UIListLayout", {Parent = TabContainer, SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 5)})
     local PagesContainer = Library:Create("Frame", {Parent = Main, Size = UDim2.new(1, -120, 1, -20), Position = UDim2.new(0, 120, 0, 10), BackgroundTransparency = 1})
@@ -125,10 +127,10 @@ function Library:AddSlider(Page, Text, Flag, Min, Max)
     Trig.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then Move(i); local c; c=Services.UserInput.InputChanged:Connect(function(io) if io.UserInputType==Enum.UserInputType.MouseMovement or io.UserInputType==Enum.UserInputType.Touch then Move(io) end end); local r; r=Services.UserInput.InputEnded:Connect(function(io) if io.UserInputType==Enum.UserInputType.MouseButton1 or io.UserInputType==Enum.UserInputType.Touch then c:Disconnect(); r:Disconnect() end end) end end)
 end
 
--- MENU CONSTRUCTION
+-- MENU
 local TabCombat = Library:AddTab("Combat")
-Library:AddToggle(TabCombat, "Enabled", "Aimbot")
-Library:AddSlider(TabCombat, "Smoothness", "Sensitivity", 1, 15)
+Library:AddToggle(TabCombat, "Auto-Rage (Mobile)", "Aimbot") -- Nom changé pour être clair
+Library:AddSlider(TabCombat, "Smooth (1=Fast)", "Sensitivity", 1, 10) -- 1 = Très rapide
 Library:AddToggle(TabCombat, "Team Check", "TeamCheck")
 
 local TabVisuals = Library:AddTab("Visuals")
@@ -150,7 +152,7 @@ Library:AddToggle(TabSettings, "Player Card", "ShowWatermark", function(v) Windo
 Library:AddToggle(TabSettings, "Show Radius", "ShowFOV")
 Library:AddSlider(TabSettings, "Radius Size", "FOV_Radius", 50, 500)
 
--- --- ENGINE V59 (CENTER LOCK FIX) ---
+-- ENGINE V60
 local Cache = {}
 local CrosshairX = Drawing.new("Line"); local CrosshairY = Drawing.new("Line")
 
@@ -164,15 +166,12 @@ local function CreateDrawings()
     D.Skeleton = {}; for i=1, 15 do table.insert(D.Skeleton, Drawing.new("Line")) end
     return D
 end
-
 local function RemoveDrawings(D)
     if not D then return end
     D.Box:Remove(); D.Snap:Remove(); D.Name:Remove(); D.HPBg:Remove(); D.HP:Remove(); for _,L in pairs(D.Skeleton) do L:Remove() end
 end
-
 local function AddToCache(Player) if Player ~= LocalPlayer and not Cache[Player] then Cache[Player] = CreateDrawings() end end
 local function RemoveFromCache(Player) if Cache[Player] then RemoveDrawings(Cache[Player]); Cache[Player] = nil end end
-
 for _, P in pairs(Services.Players:GetPlayers()) do AddToCache(P) end
 Services.Players.PlayerAdded:Connect(AddToCache); Services.Players.PlayerRemoving:Connect(RemoveFromCache)
 
@@ -185,20 +184,23 @@ local function IsAlly(Player)
     return Player.Team == LocalPlayer.Team
 end
 
+-- FONCTION WALLCHECK (STRICTE)
+local function IsVisible(Part, Ignore)
+    local Origin = Camera.CFrame.Position
+    local Direction = Part.Position - Origin
+    local Params = RaycastParams.new()
+    Params.FilterDescendantsInstances = {LocalPlayer.Character, Camera, Ignore}
+    Params.FilterType = Enum.RaycastFilterType.Exclude
+    local Result = Services.Workspace:Raycast(Origin, Direction, Params)
+    return Result == nil or Result.Instance:IsDescendantOf(Ignore) -- Visible si rien touche ou touche le joueur
+end
+
 local FOV_Circle = Drawing.new("Circle"); FOV_Circle.Filled=false; FOV_Circle.Thickness=1; FOV_Circle.Color=Color3.new(1,1,1)
 
 Services.RunService.RenderStepped:Connect(function()
-    local ScreenSize = Camera.ViewportSize
+    local Mouse = Services.UserInput:GetMouseLocation(); local ScreenSize = Camera.ViewportSize
     
-    -- SYSTEME CENTRAL POUR MOBILE (LE FIX EST ICI)
-    local AimPoint
-    if IsMobile then
-        -- Sur Mobile, on vise le CENTRE de l'écran, pas le doigt
-        AimPoint = Vector2.new(ScreenSize.X/2, ScreenSize.Y/2)
-    else
-        -- Sur PC, on vise la Souris
-        AimPoint = Services.UserInput:GetMouseLocation()
-    end
+    local AimPoint = IsMobile and Vector2.new(ScreenSize.X/2, ScreenSize.Y/2) or Mouse
 
     if Settings.Crosshair then
         CrosshairX.Visible = true; CrosshairY.Visible = true
@@ -207,10 +209,7 @@ Services.RunService.RenderStepped:Connect(function()
     else CrosshairX.Visible = false; CrosshairY.Visible = false end
 
     if Settings.EnableFOVChange then Camera.FieldOfView = Settings.CameraFOV end
-    FOV_Circle.Visible = Settings.ShowFOV; FOV_Circle.Radius = Settings.FOV_Radius
-    
-    -- Le cercle FOV suit l'AimPoint (Centre sur mobile, Souris sur PC)
-    FOV_Circle.Position = AimPoint
+    FOV_Circle.Visible = Settings.ShowFOV; FOV_Circle.Radius = Settings.FOV_Radius; FOV_Circle.Position = AimPoint
     
     local Target = nil; local MinDist = Settings.FOV_Radius
 
@@ -245,45 +244,49 @@ Services.RunService.RenderStepped:Connect(function()
                 end
             else for _,L in pairs(Draw.Skeleton) do L.Visible=false end end
 
-            -- CALCUL AIMBOT PAR RAPPORT A AIMPOINT (CENTRE OU SOURIS)
             if Settings.Aimbot then
                 local HeadPos = Camera:WorldToViewportPoint(Head.Position)
                 local DistToCenter = (Vector2.new(HeadPos.X, HeadPos.Y) - AimPoint).Magnitude
-                if DistToCenter < MinDist then MinDist = DistToCenter; Target = Head end
+                
+                -- LOGIQUE MOBILE AUTO-LOCK : VERIFIER LA VISIBILITE
+                if DistToCenter < MinDist then
+                    if IsMobile then
+                         -- Mobile : On vérifie si visible pour pas tirer dans les murs
+                         if IsVisible(Head, Player.Character) then
+                             MinDist = DistToCenter; Target = Head
+                         end
+                    else
+                         -- PC : Pas besoin de check ici (Wallbang ou manuel)
+                         MinDist = DistToCenter; Target = Head
+                    end
+                end
             end
         else
             Draw.Box.Visible=false; Draw.Snap.Visible=false; Draw.Name.Visible=false; Draw.HPBg.Visible=false; Draw.HP.Visible=false; for _,L in pairs(Draw.Skeleton) do L.Visible=false end
         end
     end
 
-    -- EXECUTION AIMBOT
     if Target then
-        if IsMobile then
-            -- MOBILE AUTO-AIM + AUTO-FIRE
-            if Settings.Aimbot then
-                local Pos = Camera:WorldToViewportPoint(Target.Position)
-                -- Deplace la caméra vers la cible (basé sur le centre)
-                local RelX = (Pos.X - ScreenSize.X/2) / Settings.Sensitivity
-                local RelY = (Pos.Y - ScreenSize.Y/2) / Settings.Sensitivity
-                mousemoverel(RelX, RelY)
-                
-                -- Auto Fire Safe
-                if not _G.AF_DB then
-                    _G.AF_DB = true
-                    pcall(function() mouse1click() end)
-                    task.delay(0.1, function() _G.AF_DB = false end)
-                end
+        if IsMobile and Settings.Aimbot then
+            -- MOBILE : AUTO AIM + AUTO SHOOT
+            local Pos = Camera:WorldToViewportPoint(Target.Position)
+            local RelX = (Pos.X - ScreenSize.X/2) / Settings.Sensitivity
+            local RelY = (Pos.Y - ScreenSize.Y/2) / Settings.Sensitivity
+            mousemoverel(RelX, RelY)
+            
+            -- Auto Trigger
+            if not _G.AF_DB then
+                _G.AF_DB = true
+                pcall(function() mouse1click() end)
+                task.delay(0.1, function() _G.AF_DB = false end)
             end
-        else
-            -- PC MANUAL AIM
-            if Services.UserInput:IsMouseButtonPressed(Settings.AimKey) and Settings.Aimbot then
-                local Pos = Camera:WorldToViewportPoint(Target.Position)
-                local MousePos = Services.UserInput:GetMouseLocation()
-                mousemoverel((Pos.X - MousePos.X)/Settings.Sensitivity, (Pos.Y - MousePos.Y)/Settings.Sensitivity)
-            end
+        elseif not IsMobile and Services.UserInput:IsMouseButtonPressed(Settings.AimKey) and Settings.Aimbot then
+            -- PC : MANUAL
+            local Pos = Camera:WorldToViewportPoint(Target.Position)
+            mousemoverel((Pos.X - Mouse.X)/Settings.Sensitivity, (Pos.Y - Mouse.Y)/Settings.Sensitivity)
         end
     end
 end)
 
-Services.CoreGui.ChildRemoved:Connect(function(c) if c.Name=="Project8888_V59" then FOV_Circle:Remove(); CrosshairX:Remove(); CrosshairY:Remove(); for _, D in pairs(Cache) do RemoveDrawings(D) end end end)
-pcall(function() local P=IsMobile and "MOBILE" or "PC"; Services.StarterGui:SetCore("SendNotification", {Title="8.8.8.8 V59", Text="Center Lock: "..P, Duration=3}) end)
+Services.CoreGui.ChildRemoved:Connect(function(c) if c.Name=="Project8888_V60" then FOV_Circle:Remove(); CrosshairX:Remove(); CrosshairY:Remove(); for _, D in pairs(Cache) do RemoveDrawings(D) end end end)
+pcall(function() local P=IsMobile and "MOBILE" or "PC"; Services.StarterGui:SetCore("SendNotification", {Title="8.8.8.8 V60", Text="Auto-Rage: "..P, Duration=3}) end)
