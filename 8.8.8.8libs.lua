@@ -1,5 +1,5 @@
--- [[ 8.8.8.8 PROJECT | V62 MOVEMENT FIX ]] --
--- [[ MOBILE: VIRTUAL INPUT MANAGER (WALK FIX) | PC: STANDARD ]] --
+-- [[ 8.8.8.8 PROJECT | V63 GHOST TRIGGER ]] --
+-- [[ FIX: SHOOTING DOES NOT STOP WALKING ANYMORE ]] --
 
 local Services = {
     Players = game:GetService("Players"),
@@ -8,7 +8,6 @@ local Services = {
     TweenService = game:GetService("TweenService"),
     CoreGui = game:GetService("CoreGui"),
     Workspace = game:GetService("Workspace"),
-    VirtualInputManager = game:GetService("VirtualInputManager") -- LE SAUVEUR POUR MOBILE
 }
 
 local LocalPlayer = Services.Players.LocalPlayer
@@ -44,7 +43,7 @@ local Settings = {
 
     ShowWatermark = true,
     ShowFOV = true,
-    FOV_Radius = IsMobile and 160 or 150
+    FOV_Radius = IsMobile and 180 or 150
 }
 
 -- --- UI LIBRARY ---
@@ -62,8 +61,8 @@ function Library:MakeDraggable(gui)
 end
 
 function Library:CreateWindow()
-    if Services.CoreGui:FindFirstChild("Project8888_V62") then Services.CoreGui.Project8888_V62:Destroy() end
-    local Screen = Library:Create("ScreenGui", {Name = "Project8888_V62", Parent = Services.CoreGui, ResetOnSpawn = false, DisplayOrder = 10000})
+    if Services.CoreGui:FindFirstChild("Project8888_V63") then Services.CoreGui.Project8888_V63:Destroy() end
+    local Screen = Library:Create("ScreenGui", {Name = "Project8888_V63", Parent = Services.CoreGui, ResetOnSpawn = false, DisplayOrder = 10000})
     
     local WinSize = IsMobile and UDim2.new(0, 340, 0, 320) or UDim2.new(0, 550, 0, 400)
     local Main = Library:Create("Frame", {Parent = Screen, Size = WinSize, Position = UDim2.new(0.5,0,0.5,0), AnchorPoint = Vector2.new(0.5,0.5), BackgroundColor3 = UIConfig.Main, ClipsDescendants = true, Active = true, Draggable = true})
@@ -73,7 +72,7 @@ function Library:CreateWindow()
     local Sidebar = Library:Create("Frame", {Parent = Main, Size = UDim2.new(0, 110, 1, 0), BackgroundColor3 = UIConfig.Sidebar, BorderSizePixel = 0}); Library:Create("UICorner", {Parent = Sidebar, CornerRadius = UDim.new(0, 10)})
     Library:Create("Frame", {Parent = Sidebar, Size = UDim2.new(0, 10, 1, 0), Position = UDim2.new(1,-10,0,0), BackgroundColor3 = UIConfig.Sidebar, BorderSizePixel=0})
     local Title = Library:Create("TextLabel", {Parent = Sidebar, Text = "8.8.8.8", Size = UDim2.new(1, 0, 0, 40), BackgroundTransparency = 1, Font = Enum.Font.GothamBlack, TextSize = 20, TextColor3 = UIConfig.Accent, Position = UDim2.new(0,0,0,10)})
-    Library:Create("TextLabel", {Parent = Title, Text = "HUB V62", Size = UDim2.new(1, 0, 0, 15), Position = UDim2.new(0,0,0.8,0), BackgroundTransparency = 1, Font = Enum.Font.Gotham, TextSize = 10, TextColor3 = UIConfig.TextDark})
+    Library:Create("TextLabel", {Parent = Title, Text = "HUB V63", Size = UDim2.new(1, 0, 0, 15), Position = UDim2.new(0,0,0.8,0), BackgroundTransparency = 1, Font = Enum.Font.Gotham, TextSize = 10, TextColor3 = UIConfig.TextDark})
 
     local TabContainer = Library:Create("Frame", {Parent = Sidebar, Size = UDim2.new(1, 0, 1, -60), Position = UDim2.new(0, 0, 0, 60), BackgroundTransparency = 1}); Library:Create("UIListLayout", {Parent = TabContainer, SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 5)})
     local PagesContainer = Library:Create("Frame", {Parent = Main, Size = UDim2.new(1, -120, 1, -20), Position = UDim2.new(0, 120, 0, 10), BackgroundTransparency = 1})
@@ -152,7 +151,7 @@ Library:AddToggle(TabSettings, "Player Card", "ShowWatermark", function(v) Windo
 Library:AddToggle(TabSettings, "Show Radius", "ShowFOV")
 Library:AddSlider(TabSettings, "Radius Size", "FOV_Radius", 50, 500)
 
--- ENGINE V61
+-- ENGINE V62
 local Cache = {}
 local CrosshairX = Drawing.new("Line"); local CrosshairY = Drawing.new("Line")
 
@@ -259,16 +258,23 @@ Services.RunService.RenderStepped:Connect(function()
     -- AIMBOT EXECUTION
     if Target then
         if IsMobile and Settings.Aimbot then
-            -- MOBILE FIX: CAMERA CRAME (Pas de mousemoverel, donc tu peux marcher)
+            -- MOBILE : CAMERA LOCK (NO MOUSE MOVE) + GHOST TRIGGER
             Camera.CFrame = CFrame.new(Camera.CFrame.Position, Target.Position)
             
-            -- AUTO SHOOT (Using VirtualInputManager if possible to enable multitasking)
-            if Services.VirtualInputManager then
-                Services.VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 1)
-                task.delay(0.05, function() Services.VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 1) end)
-            else
-                -- Fallback old method if VIM not supported
-                if not _G.AF_DB then _G.AF_DB = true; pcall(function() mouse1click() end); task.delay(0.1, function() _G.AF_DB = false end) end
+            -- GHOST TRIGGER (Does not interrupt movement)
+            local Character = LocalPlayer.Character
+            if Character then
+                local Tool = Character:FindFirstChildOfClass("Tool")
+                if Tool then
+                    Tool:Activate() -- Utilise la fonction interne de l'outil
+                else
+                    -- Fallback: Virtual Input (Safe Click)
+                    -- Cela ne devrait pas arrêter le joystick car c'est interne
+                    pcall(function()
+                        Services.VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 1)
+                        task.delay(0.01, function() Services.VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 1) end)
+                    end)
+                end
             end
         elseif not IsMobile and Services.UserInput:IsMouseButtonPressed(Settings.AimKey) and Settings.Aimbot then
             -- PC: MANUAL
@@ -278,5 +284,5 @@ Services.RunService.RenderStepped:Connect(function()
     end
 end)
 
-Services.CoreGui.ChildRemoved:Connect(function(c) if c.Name=="Project8888_V61" then FOV_Circle:Remove(); CrosshairX:Remove(); CrosshairY:Remove(); for _, D in pairs(Cache) do RemoveDrawings(D) end end end)
-pcall(function() local P=IsMobile and "MOBILE" or "PC"; Services.StarterGui:SetCore("SendNotification", {Title="8.8.8.8 V61", Text="Walk Fix: "..P, Duration=3}) end)
+Services.CoreGui.ChildRemoved:Connect(function(c) if c.Name=="Project8888_V62" then FOV_Circle:Remove(); CrosshairX:Remove(); CrosshairY:Remove(); for _, D in pairs(Cache) do RemoveDrawings(D) end end end)
+pcall(function() local P=IsMobile and "MOBILE" or "PC"; Services.StarterGui:SetCore("SendNotification", {Title="8.8.8.8 V62", Text="Ghost Trigger: "..P, Duration=3}) end)
