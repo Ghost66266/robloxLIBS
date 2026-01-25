@@ -1,5 +1,5 @@
--- [[ 8.8.8.8 PROJECT | V64 MANUAL FIRE ]] --
--- [[ MOBILE: AIM LOCK ONLY (NO SHOOT) | PC: STANDARD ]] --
+-- [[ 8.8.8.8 PROJECT | V67 STRICT WALLCHECK ]] --
+-- [[ PC: WALLCHECK 100% STRICT | MOBILE: UNTOUCHED ]] --
 
 local Services = {
     Players = game:GetService("Players"),
@@ -20,11 +20,13 @@ if not Drawing then return warn("Exploit not supported") end
 
 -- --- CONFIGURATION ---
 local Settings = {
-    Aimbot = false,         -- Mobile: Juste la visée / PC: Visée manuelle
-    AimPart = "Head",       
-    Sensitivity = 1,
+    -- VARIABLES SEPAREES
+    Aimbot_PC = false,      -- PC (Legit + WallCheck Strict)
+    Aimbot_Mobile = false,  -- Mobile (Lock Camera)
     
-    AimKey = Enum.UserInputType.MouseButton2, -- PC Only
+    AimPart = "Head",       
+    Sensitivity = 3,        -- Vitesse (PC)
+    AimKey = Enum.UserInputType.MouseButton2, -- Touche (PC)
     
     ESP_Enabled = true,
     ESP_Box = true,         
@@ -61,8 +63,8 @@ function Library:MakeDraggable(gui)
 end
 
 function Library:CreateWindow()
-    if Services.CoreGui:FindFirstChild("Project8888_V64") then Services.CoreGui.Project8888_V64:Destroy() end
-    local Screen = Library:Create("ScreenGui", {Name = "Project8888_V64", Parent = Services.CoreGui, ResetOnSpawn = false, DisplayOrder = 10000})
+    if Services.CoreGui:FindFirstChild("Project8888_V67") then Services.CoreGui.Project8888_V67:Destroy() end
+    local Screen = Library:Create("ScreenGui", {Name = "Project8888_V67", Parent = Services.CoreGui, ResetOnSpawn = false, DisplayOrder = 10000})
     
     local WinSize = IsMobile and UDim2.new(0, 340, 0, 320) or UDim2.new(0, 550, 0, 400)
     local Main = Library:Create("Frame", {Parent = Screen, Size = WinSize, Position = UDim2.new(0.5,0,0.5,0), AnchorPoint = Vector2.new(0.5,0.5), BackgroundColor3 = UIConfig.Main, ClipsDescendants = true, Active = true, Draggable = true})
@@ -72,7 +74,7 @@ function Library:CreateWindow()
     local Sidebar = Library:Create("Frame", {Parent = Main, Size = UDim2.new(0, 110, 1, 0), BackgroundColor3 = UIConfig.Sidebar, BorderSizePixel = 0}); Library:Create("UICorner", {Parent = Sidebar, CornerRadius = UDim.new(0, 10)})
     Library:Create("Frame", {Parent = Sidebar, Size = UDim2.new(0, 10, 1, 0), Position = UDim2.new(1,-10,0,0), BackgroundColor3 = UIConfig.Sidebar, BorderSizePixel=0})
     local Title = Library:Create("TextLabel", {Parent = Sidebar, Text = "8.8.8.8", Size = UDim2.new(1, 0, 0, 40), BackgroundTransparency = 1, Font = Enum.Font.GothamBlack, TextSize = 20, TextColor3 = UIConfig.Accent, Position = UDim2.new(0,0,0,10)})
-    Library:Create("TextLabel", {Parent = Title, Text = "HUB V64", Size = UDim2.new(1, 0, 0, 15), Position = UDim2.new(0,0,0.8,0), BackgroundTransparency = 1, Font = Enum.Font.Gotham, TextSize = 10, TextColor3 = UIConfig.TextDark})
+    Library:Create("TextLabel", {Parent = Title, Text = "HUB V67", Size = UDim2.new(1, 0, 0, 15), Position = UDim2.new(0,0,0.8,0), BackgroundTransparency = 1, Font = Enum.Font.Gotham, TextSize = 10, TextColor3 = UIConfig.TextDark})
 
     local TabContainer = Library:Create("Frame", {Parent = Sidebar, Size = UDim2.new(1, 0, 1, -60), Position = UDim2.new(0, 0, 0, 60), BackgroundTransparency = 1}); Library:Create("UIListLayout", {Parent = TabContainer, SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 5)})
     local PagesContainer = Library:Create("Frame", {Parent = Main, Size = UDim2.new(1, -120, 1, -20), Position = UDim2.new(0, 120, 0, 10), BackgroundTransparency = 1})
@@ -128,8 +130,16 @@ end
 
 -- MENU CONSTRUCTION
 local TabCombat = Library:AddTab("Combat")
-Library:AddToggle(TabCombat, "Auto-Lock (No Shoot)", "Aimbot") -- Clarification
-Library:AddSlider(TabCombat, "Smooth (PC Only)", "Sensitivity", 1, 15)
+
+if IsMobile then
+    -- MOBILE ONLY
+    Library:AddToggle(TabCombat, "📱 Auto-Lock (Mobile)", "Aimbot_Mobile")
+else
+    -- PC ONLY
+    Library:AddToggle(TabCombat, "💻 Aimbot (PC)", "Aimbot_PC")
+    Library:AddSlider(TabCombat, "Smoothness", "Sensitivity", 1, 15)
+end
+
 Library:AddToggle(TabCombat, "Team Check", "TeamCheck")
 
 local TabVisuals = Library:AddTab("Visuals")
@@ -151,7 +161,7 @@ Library:AddToggle(TabSettings, "Player Card", "ShowWatermark", function(v) Windo
 Library:AddToggle(TabSettings, "Show Radius", "ShowFOV")
 Library:AddSlider(TabSettings, "Radius Size", "FOV_Radius", 50, 500)
 
--- ENGINE V64 (NO SHOOT)
+-- ENGINE V67
 local Cache = {}
 local CrosshairX = Drawing.new("Line"); local CrosshairY = Drawing.new("Line")
 
@@ -183,21 +193,35 @@ local function IsAlly(Player)
     return Player.Team == LocalPlayer.Team
 end
 
--- WALLCHECK
-local function IsVisible(Part, Ignore)
+-- WALLCHECK STRICT V67 (PC ONLY FIX)
+local function IsVisible(TargetPart, TargetCharacter)
     local Origin = Camera.CFrame.Position
-    local Direction = Part.Position - Origin
+    local Direction = TargetPart.Position - Origin
     local Params = RaycastParams.new()
-    Params.FilterDescendantsInstances = {LocalPlayer.Character, Camera, Ignore}
+    
+    -- Le secret du WallCheck Strict :
+    -- On ignore notre perso et la caméra.
+    -- MAIS on n'ignore PAS l'ennemi.
+    -- Si le rayon touche l'ennemi en premier -> Visible.
+    -- Si le rayon touche un mur en premier -> Caché.
+    Params.FilterDescendantsInstances = {LocalPlayer.Character, Camera}
     Params.FilterType = Enum.RaycastFilterType.Exclude
+    Params.IgnoreWater = true
+    
     local Result = Services.Workspace:Raycast(Origin, Direction, Params)
-    return Result == nil or Result.Instance:IsDescendantOf(Ignore)
+    
+    if Result == nil then return true end -- Pas d'obstacle (Ciel)
+    if Result.Instance:IsDescendantOf(TargetCharacter) then return true end -- Touche l'ennemi = Visible
+    
+    return false -- Touche un mur = Caché
 end
 
 local FOV_Circle = Drawing.new("Circle"); FOV_Circle.Filled=false; FOV_Circle.Thickness=1; FOV_Circle.Color=Color3.new(1,1,1)
 
 Services.RunService.RenderStepped:Connect(function()
     local Mouse = Services.UserInput:GetMouseLocation(); local ScreenSize = Camera.ViewportSize
+    
+    -- POINT DE VISEE
     local AimPoint = IsMobile and Vector2.new(ScreenSize.X/2, ScreenSize.Y/2) or Mouse
 
     if Settings.Crosshair then
@@ -242,13 +266,24 @@ Services.RunService.RenderStepped:Connect(function()
                 end
             else for _,L in pairs(Draw.Skeleton) do L.Visible=false end end
 
-            -- AIMBOT CHECK
-            if Settings.Aimbot then
+            -- VERIFICATION CIBLE
+            if (IsMobile and Settings.Aimbot_Mobile) or (not IsMobile and Settings.Aimbot_PC) then
                 local HeadPos = Camera:WorldToViewportPoint(Head.Position)
                 local DistToCenter = (Vector2.new(HeadPos.X, HeadPos.Y) - AimPoint).Magnitude
                 
                 if DistToCenter < MinDist then
-                     if IsVisible(Head, Player.Character) then MinDist = DistToCenter; Target = Head end
+                    -- WALLCHECK APPLICATION
+                    if not IsMobile then
+                        -- PC : STRICT CHECK
+                        if IsVisible(Head, Player.Character) then 
+                            MinDist = DistToCenter; Target = Head 
+                        end
+                    else
+                        -- MOBILE : CHECK SOUPLE (Optionnel, mais activé pour la qualité)
+                        if IsVisible(Head, Player.Character) then 
+                            MinDist = DistToCenter; Target = Head 
+                        end
+                    end
                 end
             end
         else
@@ -256,20 +291,19 @@ Services.RunService.RenderStepped:Connect(function()
         end
     end
 
-    -- AIMBOT EXECUTION
+    -- EXECUTION AIMBOT SEPAREE
     if Target then
-        if IsMobile and Settings.Aimbot then
-            -- MOBILE : CAMERA LOCK ONLY (ZERO SHOOTING)
-            -- This guarantees joystick never stops.
+        if IsMobile and Settings.Aimbot_Mobile then
+            -- MOBILE LOGIC: Camera Lock (No Shoot)
             Camera.CFrame = CFrame.new(Camera.CFrame.Position, Target.Position)
             
-        elseif not IsMobile and Services.UserInput:IsMouseButtonPressed(Settings.AimKey) and Settings.Aimbot then
-            -- PC: MANUAL
+        elseif not IsMobile and Settings.Aimbot_PC and Services.UserInput:IsMouseButtonPressed(Settings.AimKey) then
+            -- PC LOGIC: Mouse Move (Legit)
             local Pos = Camera:WorldToViewportPoint(Target.Position)
             mousemoverel((Pos.X - Mouse.X)/Settings.Sensitivity, (Pos.Y - Mouse.Y)/Settings.Sensitivity)
         end
     end
 end)
 
-Services.CoreGui.ChildRemoved:Connect(function(c) if c.Name=="Project8888_V64" then FOV_Circle:Remove(); CrosshairX:Remove(); CrosshairY:Remove(); for _, D in pairs(Cache) do RemoveDrawings(D) end end end)
-pcall(function() local P=IsMobile and "MOBILE" or "PC"; Services.StarterGui:SetCore("SendNotification", {Title="8.8.8.8 V64", Text="Aim Lock: "..P, Duration=3}) end)
+Services.CoreGui.ChildRemoved:Connect(function(c) if c.Name=="Project8888_V67" then FOV_Circle:Remove(); CrosshairX:Remove(); CrosshairY:Remove(); for _, D in pairs(Cache) do RemoveDrawings(D) end end end)
+pcall(function() local P=IsMobile and "MOBILE" or "PC"; Services.StarterGui:SetCore("SendNotification", {Title="8.8.8.8 V67", Text="Strict WallCheck: "..P, Duration=3}) end)
