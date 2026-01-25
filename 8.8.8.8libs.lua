@@ -1,4 +1,4 @@
--- [[ 8.8.8.8 UI LIBRARY | REBRANDED ]] --
+-- [[ 8.8.8.8 LIBRARY | CLEAN VERSION ]] --
 
 local Library = {}
 local Services = {
@@ -12,11 +12,11 @@ local Services = {
 local LocalPlayer = Services.Players.LocalPlayer
 local IsMobile = not Services.UserInput.KeyboardEnabled
 
--- UI Colors
+-- UI Colors (Default)
 local UIConfig = {
     Main = Color3.fromRGB(25, 25, 30),
     Sidebar = Color3.fromRGB(30, 30, 35),
-    Accent = Color3.fromRGB(0, 140, 255),
+    Accent = Color3.fromRGB(119, 120, 255), -- Neon Default
     Text = Color3.fromRGB(240, 240, 240),
     TextDark = Color3.fromRGB(150, 150, 150),
     Item = Color3.fromRGB(40, 40, 45),
@@ -54,13 +54,13 @@ end
 
 function Library:CreateWindow(Settings)
     local Name = Settings.Name or "8.8.8.8"
-    local SubTitle = Settings.Intro or "HUB"
+    local SubTitle = Settings.Intro or "V1.0"
     UIConfig.Accent = Settings.Color or UIConfig.Accent
 
-    -- Nettoyage de l'ancienne interface (Nom changé ici)
-    if Services.CoreGui:FindFirstChild("Project8888_UI") then Services.CoreGui.Project8888_UI:Destroy() end
+    -- Nettoyage complet (Nom changé)
+    if Services.CoreGui:FindFirstChild("8888_UI_Main") then Services.CoreGui["8888_UI_Main"]:Destroy() end
     
-    local Screen = Library:Create("ScreenGui", {Name = "Project8888_UI", Parent = Services.CoreGui, ResetOnSpawn = false, DisplayOrder = 10000})
+    local Screen = Library:Create("ScreenGui", {Name = "8888_UI_Main", Parent = Services.CoreGui, ResetOnSpawn = false, DisplayOrder = 10000})
     local WinSize = IsMobile and UDim2.new(0, 340, 0, 320) or UDim2.new(0, 550, 0, 400)
     
     local Main = Library:Create("Frame", {
@@ -76,7 +76,6 @@ function Library:CreateWindow(Settings)
 
     local Sidebar = Library:Create("Frame", {Parent = Main, Size = UDim2.new(0, 110, 1, 0), BackgroundColor3 = UIConfig.Sidebar, BorderSizePixel = 0})
     Library:Create("UICorner", {Parent = Sidebar, CornerRadius = UDim.new(0, 10)})
-    Library:Create("Frame", {Parent = Sidebar, Size = UDim2.new(0, 10, 1, 0), Position = UDim2.new(1,-10,0,0), BackgroundColor3 = UIConfig.Sidebar, BorderSizePixel=0})
     
     local TitleLabel = Library:Create("TextLabel", {Parent = Sidebar, Text = Name, Size = UDim2.new(1, 0, 0, 40), BackgroundTransparency = 1, Font = Enum.Font.GothamBlack, TextSize = 18, TextColor3 = UIConfig.Accent, Position = UDim2.new(0,0,0,10)})
     Library:Create("TextLabel", {Parent = TitleLabel, Text = SubTitle, Size = UDim2.new(1, 0, 0, 15), Position = UDim2.new(0,0,0.8,0), BackgroundTransparency = 1, Font = Enum.Font.Gotham, TextSize = 10, TextColor3 = UIConfig.TextDark})
@@ -140,7 +139,6 @@ function Library:CreateWindow(Settings)
         if #TabContainer:GetChildren() == 2 then Activate() end
 
         local PageFunctions = {}
-
         local function AddAnim(Obj)
             Obj.MouseEnter:Connect(function() Library:Tween(Obj, {BackgroundColor3 = UIConfig.Hover}, 0.2) end)
             Obj.MouseLeave:Connect(function() Library:Tween(Obj, {BackgroundColor3 = UIConfig.Item}, 0.2) end)
@@ -204,11 +202,9 @@ function Library:CreateWindow(Settings)
             AddAnim(Btn)
             Btn.MouseButton1Click:Connect(function() if Callback then Callback() end end)
         end
-
         return PageFunctions
     end
     function WindowFunctions:ToggleWatermark(Bool) Card.Visible = Bool end
     return WindowFunctions
 end
-
 return Library
