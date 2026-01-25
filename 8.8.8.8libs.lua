@@ -1,5 +1,4 @@
--- [[ ONYX UI LIBRARY V1.6 | FINAL STABLE ]] --
--- [[ FIXES: Button Shrink, Slide Animation, Labels ]] --
+-- [[ 8.8.8.8 UI LIBRARY | REBRANDED ]] --
 
 local Library = {}
 local Services = {
@@ -54,13 +53,14 @@ function Library:MakeDraggable(gui)
 end
 
 function Library:CreateWindow(Settings)
-    local Name = Settings.Name or "UI"
-    local SubTitle = Settings.Intro or "V1.0"
+    local Name = Settings.Name or "8.8.8.8"
+    local SubTitle = Settings.Intro or "HUB"
     UIConfig.Accent = Settings.Color or UIConfig.Accent
 
-    if Services.CoreGui:FindFirstChild("OnyxLib") then Services.CoreGui.OnyxLib:Destroy() end
+    -- Nettoyage de l'ancienne interface (Nom changé ici)
+    if Services.CoreGui:FindFirstChild("Project8888_UI") then Services.CoreGui.Project8888_UI:Destroy() end
     
-    local Screen = Library:Create("ScreenGui", {Name = "OnyxLib", Parent = Services.CoreGui, ResetOnSpawn = false, DisplayOrder = 10000})
+    local Screen = Library:Create("ScreenGui", {Name = "Project8888_UI", Parent = Services.CoreGui, ResetOnSpawn = false, DisplayOrder = 10000})
     local WinSize = IsMobile and UDim2.new(0, 340, 0, 320) or UDim2.new(0, 550, 0, 400)
     
     local Main = Library:Create("Frame", {
@@ -85,7 +85,7 @@ function Library:CreateWindow(Settings)
     Library:Create("UIListLayout", {Parent = TabContainer, SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 5)})
     local PagesContainer = Library:Create("Frame", {Parent = Main, Size = UDim2.new(1, -120, 1, -20), Position = UDim2.new(0, 120, 0, 10), BackgroundTransparency = 1})
 
-    -- Watermark / Player Card
+    -- Watermark
     local Card = Library:Create("Frame", {Parent = Screen, Size = UDim2.new(0, 200, 0, 50), Position = UDim2.new(0, 10, 1, -60), BackgroundColor3 = UIConfig.Main, BackgroundTransparency = 0.1, Visible = true})
     Library:Create("UICorner", {Parent = Card, CornerRadius = UDim.new(0, 8)})
     Library:Create("UIStroke", {Parent = Card, Color = UIConfig.Item, Thickness = 1})
@@ -144,7 +144,6 @@ function Library:CreateWindow(Settings)
         local function AddAnim(Obj)
             Obj.MouseEnter:Connect(function() Library:Tween(Obj, {BackgroundColor3 = UIConfig.Hover}, 0.2) end)
             Obj.MouseLeave:Connect(function() Library:Tween(Obj, {BackgroundColor3 = UIConfig.Item}, 0.2) end)
-            -- FIX: Force size reset on click to prevent shrinking
             Obj.MouseButton1Down:Connect(function() Library:Tween(Obj, {Size = UDim2.new(1, -15, 0, 38)}, 0.1) end) 
             Obj.MouseButton1Up:Connect(function() Library:Tween(Obj, {Size = UDim2.new(1, -10, 0, 40)}, 0.1) end)
         end
