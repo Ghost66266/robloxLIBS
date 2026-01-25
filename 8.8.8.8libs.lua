@@ -1,5 +1,5 @@
--- [[ 8.8.8.8 PROJECT | V57 FINAL HYBRID ]] --
--- [[ PC REMAINS UNCHANGED | MOBILE OPTIMIZED ]] --
+-- [[ 8.8.8.8 PROJECT | V58 MOBILE AUTO-MODE ]] --
+-- [[ PC: STANDARD | MOBILE: AUTO-AIM & AUTO-FIRE ]] --
 
 local Services = {
     Players = game:GetService("Players"),
@@ -8,13 +8,13 @@ local Services = {
     TweenService = game:GetService("TweenService"),
     CoreGui = game:GetService("CoreGui"),
     Workspace = game:GetService("Workspace"),
+    VirtualUser = game:GetService("VirtualUser") -- Pour l'Auto-Fire Mobile
 }
 
 local LocalPlayer = Services.Players.LocalPlayer
 local Camera = Services.Workspace.CurrentCamera
 
 -- 1. DETECTION STRICTE
--- Si Clavier détecté = PC. Sinon = Mobile.
 local IsMobile = not Services.UserInput.KeyboardEnabled 
 
 if not Drawing then return warn("Exploit not supported") end
@@ -23,12 +23,10 @@ if not Drawing then return warn("Exploit not supported") end
 local Settings = {
     Aimbot = false,
     AimPart = "Head",
-    Sensitivity = 3,
+    Sensitivity = 3, -- Vitesse de visée
     
-    -- LOGIQUE HYBRIDE AIM KEY
-    -- PC : Clic Droit (MouseButton2)
-    -- Mobile : Taper (MouseButton1)
-    AimKey = IsMobile and Enum.UserInputType.MouseButton1 or Enum.UserInputType.MouseButton2,
+    -- PC SEULEMENT : Touche de visée (Clic Droit)
+    AimKey = Enum.UserInputType.MouseButton2,
     
     ESP_Enabled = true,
     ESP_Box = true,         
@@ -47,7 +45,7 @@ local Settings = {
 
     ShowWatermark = true,
     ShowFOV = true,
-    FOV_Radius = IsMobile and 130 or 150
+    FOV_Radius = IsMobile and 100 or 150 -- Cercle plus petit sur mobile pour précision Auto
 }
 
 -- --- UI LIBRARY ---
@@ -72,7 +70,7 @@ function Library:Create(class, props)
     return inst
 end
 
--- Fonction pour rendre le bouton Mobile déplaçable (SANS TOUCHER AU PC)
+-- Fonction Drag (Mobile)
 function Library:MakeDraggable(gui)
     local dragging, dragInput, dragStart, startPos
     gui.InputBegan:Connect(function(input)
@@ -93,12 +91,11 @@ function Library:MakeDraggable(gui)
 end
 
 function Library:CreateWindow()
-    if Services.CoreGui:FindFirstChild("Project8888_V57") then Services.CoreGui.Project8888_V57:Destroy() end
+    if Services.CoreGui:FindFirstChild("Project8888_V58") then Services.CoreGui.Project8888_V58:Destroy() end
     
-    local Screen = Library:Create("ScreenGui", {Name = "Project8888_V57", Parent = Services.CoreGui, ResetOnSpawn = false, DisplayOrder = 10000})
+    local Screen = Library:Create("ScreenGui", {Name = "Project8888_V58", Parent = Services.CoreGui, ResetOnSpawn = false, DisplayOrder = 10000})
     
-    -- DIMENSIONS DISTINCTES PC VS MOBILE
-    local WinSize = IsMobile and UDim2.new(0, 340, 0, 320) or UDim2.new(0, 550, 0, 400) -- PC reste 550x400
+    local WinSize = IsMobile and UDim2.new(0, 340, 0, 320) or UDim2.new(0, 550, 0, 400)
     
     local Main = Library:Create("Frame", {
         Parent = Screen, Size = WinSize, Position = UDim2.new(0.5,0,0.5,0), 
@@ -106,25 +103,23 @@ function Library:CreateWindow()
         ClipsDescendants = true, Active = true, Draggable = true
     })
     
-    -- SI PC : VISIBLE PAR DEFAUT / SI MOBILE : CACHÉ
     Main.Visible = not IsMobile 
 
     Library:Create("UICorner", {Parent = Main, CornerRadius = UDim.new(0, 10)})
     Library:Create("UIStroke", {Parent = Main, Color = Color3.fromRGB(50,50,55), Thickness = 1})
 
-    -- Sidebar
     local Sidebar = Library:Create("Frame", {Parent = Main, Size = UDim2.new(0, 110, 1, 0), BackgroundColor3 = UIConfig.Sidebar, BorderSizePixel = 0})
     Library:Create("UICorner", {Parent = Sidebar, CornerRadius = UDim.new(0, 10)})
     Library:Create("Frame", {Parent = Sidebar, Size = UDim2.new(0, 10, 1, 0), Position = UDim2.new(1,-10,0,0), BackgroundColor3 = UIConfig.Sidebar, BorderSizePixel=0})
     
     local Title = Library:Create("TextLabel", {Parent = Sidebar, Text = "8.8.8.8", Size = UDim2.new(1, 0, 0, 40), BackgroundTransparency = 1, Font = Enum.Font.GothamBlack, TextSize = 20, TextColor3 = UIConfig.Accent, Position = UDim2.new(0,0,0,10)})
-    Library:Create("TextLabel", {Parent = Title, Text = "HUB V57", Size = UDim2.new(1, 0, 0, 15), Position = UDim2.new(0,0,0.8,0), BackgroundTransparency = 1, Font = Enum.Font.Gotham, TextSize = 10, TextColor3 = UIConfig.TextDark})
+    Library:Create("TextLabel", {Parent = Title, Text = "HUB V58", Size = UDim2.new(1, 0, 0, 15), Position = UDim2.new(0,0,0.8,0), BackgroundTransparency = 1, Font = Enum.Font.Gotham, TextSize = 10, TextColor3 = UIConfig.TextDark})
 
     local TabContainer = Library:Create("Frame", {Parent = Sidebar, Size = UDim2.new(1, 0, 1, -60), Position = UDim2.new(0, 0, 0, 60), BackgroundTransparency = 1})
     Library:Create("UIListLayout", {Parent = TabContainer, SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 5)})
     local PagesContainer = Library:Create("Frame", {Parent = Main, Size = UDim2.new(1, -120, 1, -20), Position = UDim2.new(0, 120, 0, 10), BackgroundTransparency = 1})
 
-    -- PLAYER CARD (Identique PC/Mobile)
+    -- PLAYER CARD
     local Card = Library:Create("Frame", {
         Parent = Screen, Size = UDim2.new(0, 200, 0, 50), Position = UDim2.new(0, 10, 1, -60),
         BackgroundColor3 = UIConfig.Main, BackgroundTransparency = 0.1, Visible = Settings.ShowWatermark
@@ -136,9 +131,8 @@ function Library:CreateWindow()
     Library:Create("TextLabel", {Parent = Card, Text = LocalPlayer.DisplayName, Size = UDim2.new(1, -50, 0, 20), Position = UDim2.new(0, 50, 0, 5), BackgroundTransparency = 1, Font = Enum.Font.GothamBold, TextColor3 = UIConfig.Text, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left})
     Library:Create("TextLabel", {Parent = Card, Text = "@" .. LocalPlayer.Name, Size = UDim2.new(1, -50, 0, 15), Position = UDim2.new(0, 50, 0, 25), BackgroundTransparency = 1, Font = Enum.Font.Gotham, TextColor3 = UIConfig.TextDark, TextSize = 11, TextXAlignment = Enum.TextXAlignment.Left})
 
-    -- LOGIQUE D'OUVERTURE (SEPARATION STRICTE)
+    -- BOUTON MOBILE FORCÉ
     if IsMobile then
-        -- MOBILE : BOUTON TACTILE
         local MobBtn = Library:Create("TextButton", {
             Parent = Screen, Text = "⚙", Size = UDim2.new(0, 50, 0, 50), 
             Position = UDim2.new(0, 20, 0, 50),
@@ -147,10 +141,9 @@ function Library:CreateWindow()
         })
         Library:Create("UICorner", {Parent = MobBtn, CornerRadius = UDim.new(1,0)})
         Library:Create("UIStroke", {Parent = MobBtn, Color = UIConfig.Accent, Thickness = 2})
-        Library:MakeDraggable(MobBtn) -- On peut bouger le bouton sur mobile
+        Library:MakeDraggable(MobBtn)
         MobBtn.MouseButton1Click:Connect(function() Main.Visible = not Main.Visible end)
     else
-        -- PC : TOUCHE INSERT (RIEN D'AUTRE)
         Services.UserInput.InputBegan:Connect(function(i,p) 
             if not p and i.KeyCode == Enum.KeyCode.Insert then 
                 Main.Visible = not Main.Visible 
@@ -163,7 +156,7 @@ end
 
 local Window = Library:CreateWindow()
 
--- ... (REST OF LIBRARY FUNCTIONS - UNCHANGED) ...
+-- ... UI LIBRARY FUNCTIONS (Standard) ...
 function Library:AddTab(Name)
     local Page = Library:Create("ScrollingFrame", {Parent = Window.Pages, Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1, ScrollBarThickness = 2, Visible = false, AutomaticCanvasSize = Enum.AutomaticSize.Y, CanvasSize = UDim2.new(0,0,0,0)})
     Library:Create("UIListLayout", {Parent = Page, SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 8)})
@@ -206,7 +199,7 @@ function Library:AddSlider(Page, Text, Flag, Min, Max)
     Trig.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then Move(i); local c; c=Services.UserInput.InputChanged:Connect(function(io) if io.UserInputType==Enum.UserInputType.MouseMovement or io.UserInputType==Enum.UserInputType.Touch then Move(io) end end); local r; r=Services.UserInput.InputEnded:Connect(function(io) if io.UserInputType==Enum.UserInputType.MouseButton1 or io.UserInputType==Enum.UserInputType.Touch then c:Disconnect(); r:Disconnect() end end) end end)
 end
 
--- --- MENU CONSTRUCTION ---
+-- MENU CONSTRUCTION
 local TabCombat = Library:AddTab("Combat")
 Library:AddToggle(TabCombat, "Enabled", "Aimbot")
 Library:AddSlider(TabCombat, "Smoothness", "Sensitivity", 1, 15)
@@ -271,7 +264,8 @@ end
 local FOV_Circle = Drawing.new("Circle"); FOV_Circle.Filled=false; FOV_Circle.Thickness=1; FOV_Circle.Color=Color3.new(1,1,1)
 
 Services.RunService.RenderStepped:Connect(function()
-    local Mouse = Services.UserInput:GetMouseLocation(); local ScreenSize = Camera.ViewportSize
+    local Mouse = Services.UserInput:GetMouseLocation()
+    local ScreenSize = Camera.ViewportSize
     
     if Settings.Crosshair then
         CrosshairX.Visible = true; CrosshairY.Visible = true
@@ -285,6 +279,7 @@ Services.RunService.RenderStepped:Connect(function()
 
     for Player, Draw in pairs(Cache) do
         local Head, Root, Hum = GetParts(Player)
+        
         if not Head or not Root or not Hum or Hum.Health <= 0 then
             Draw.Box.Visible=false; Draw.Snap.Visible=false; Draw.Name.Visible=false; Draw.HPBg.Visible=false; Draw.HP.Visible=false; for _,L in pairs(Draw.Skeleton) do L.Visible=false end; continue
         end
@@ -323,11 +318,29 @@ Services.RunService.RenderStepped:Connect(function()
         end
     end
 
-    if Target and Services.UserInput:IsMouseButtonPressed(Settings.AimKey) and mousemoverel then
-        local Pos = Camera:WorldToViewportPoint(Target.Position)
-        mousemoverel((Pos.X - Mouse.X)/Settings.Sensitivity, (Pos.Y - Mouse.Y)/Settings.Sensitivity)
+    -- AIMBOT LOGIC (PC vs MOBILE)
+    if Target then
+        if IsMobile then
+            -- MOBILE : Auto-Aim + Auto-Fire (Trigger)
+            if Settings.Aimbot then
+                local Pos = Camera:WorldToViewportPoint(Target.Position)
+                mousemoverel((Pos.X - Mouse.X)/Settings.Sensitivity, (Pos.Y - Mouse.Y)/Settings.Sensitivity)
+                -- Auto Fire Safe
+                if not _G.AutoFireDebounce then
+                    _G.AutoFireDebounce = true
+                    pcall(function() mouse1click() end) -- Standard function
+                    task.delay(0.1, function() _G.AutoFireDebounce = false end)
+                end
+            end
+        else
+            -- PC : Manual Aim (Hold Button)
+            if Services.UserInput:IsMouseButtonPressed(Settings.AimKey) and Settings.Aimbot then
+                local Pos = Camera:WorldToViewportPoint(Target.Position)
+                mousemoverel((Pos.X - Mouse.X)/Settings.Sensitivity, (Pos.Y - Mouse.Y)/Settings.Sensitivity)
+            end
+        end
     end
 end)
 
 Services.CoreGui.ChildRemoved:Connect(function(c) if c.Name=="Project8888_V57" then FOV_Circle:Remove(); CrosshairX:Remove(); CrosshairY:Remove(); for _, D in pairs(Cache) do RemoveDrawings(D) end end end)
-pcall(function() local P=IsMobile and "MOBILE" or "PC"; Services.StarterGui:SetCore("SendNotification", {Title="8.8.8.8 V57", Text="Ready on "..P, Duration=3}) end)
+pcall(function() local P=IsMobile and "MOBILE" or "PC"; Services.StarterGui:SetCore("SendNotification", {Title="8.8.8.8 V57", Text="Auto-Mode: "..P, Duration=3}) end)
