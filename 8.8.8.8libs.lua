@@ -55,10 +55,10 @@ end
 
 -- MAIN WINDOW FUNCTION
 function Library:CreateWindow(Settings)
-    local Name = Settings.Name or "ONYX UI"
+    local Name = Settings.Name or "8.8.8.8 UI" -- Pseudo par défaut corrigé
     local SubTitle = Settings.Intro or "V1.2"
     local AccentColor = Settings.Color or UIConfig.Accent
-    UIConfig.Accent = AccentColor -- Update Accent
+    UIConfig.Accent = AccentColor
 
     if Services.CoreGui:FindFirstChild("OnyxLib") then Services.CoreGui.OnyxLib:Destroy() end
     
@@ -129,8 +129,6 @@ function Library:CreateWindow(Settings)
             Library:Tween(Btn, {TextColor3 = UIConfig.Accent, BackgroundTransparency = 0.9})
         end
         Btn.MouseButton1Click:Connect(Activate)
-        
-        -- Auto Select First Tab
         if #TabContainer:GetChildren() == 2 then Activate() end
 
         local PageFunctions = {}
@@ -201,7 +199,7 @@ function Library:CreateWindow(Settings)
             end)
         end
 
-        -- ADD BUTTON (New Feature for Generic UI)
+        -- ADD BUTTON
         function PageFunctions:AddButton(Text, Callback)
             local Btn = Library:Create("TextButton", {Parent = Page, Size = UDim2.new(1, -10, 0, 40), BackgroundColor3 = UIConfig.Item, Text = "", AutoButtonColor = false})
             Library:Create("UICorner", {Parent = Btn, CornerRadius = UDim.new(0, 6)})
@@ -218,7 +216,6 @@ function Library:CreateWindow(Settings)
         return PageFunctions
     end
     
-    -- Toggle Watermark
     function WindowFunctions:ToggleWatermark(Bool)
         Card.Visible = Bool
     end
