@@ -1,5 +1,5 @@
--- [[ 8.8.8.8 PROJECT | V60 AUTO-RAGE MOBILE ]] --
--- [[ MOBILE: FULL AUTO AIM & SHOOT | PC: MANUAL ]] --
+-- [[ 8.8.8.8 PROJECT | V61 MOBILE LOCK FIX ]] --
+-- [[ MOBILE: CAMERA LOCK (NO LAG) | PC: LEGIT MOUSE ]] --
 
 local Services = {
     Players = game:GetService("Players"),
@@ -20,12 +20,11 @@ if not Drawing then return warn("Exploit not supported") end
 
 -- --- CONFIGURATION ---
 local Settings = {
-    Aimbot = false,         -- Activer pour que ça tire tout seul
-    AimPart = "Head",       -- Vise la Tête
-    Sensitivity = 1,        -- 1 = Instantané (Rage), 5 = Smooth (Legit)
+    Aimbot = false,         
+    AimPart = "Head",       
+    Sensitivity = 1,        -- (Ignoré sur mobile V61 pour être instantané)
     
-    -- PC : Clic Droit | MOBILE : Pas besoin de touche (Automatique)
-    AimKey = Enum.UserInputType.MouseButton2,
+    AimKey = Enum.UserInputType.MouseButton2, -- PC Only
     
     ESP_Enabled = true,
     ESP_Box = true,         
@@ -35,7 +34,7 @@ local Settings = {
     ESP_HealthBar = true,
     ESP_DistLimit = 1500,
     
-    ESP_Color = Color3.fromRGB(255, 50, 50),
+    ESP_Color = Color3.fromRGB(255, 0, 0), -- Rouge Vif
     TeamCheck = true,
 
     CameraFOV = 100,
@@ -44,10 +43,10 @@ local Settings = {
 
     ShowWatermark = true,
     ShowFOV = true,
-    FOV_Radius = IsMobile and 150 or 150 -- Rayon de détection
+    FOV_Radius = IsMobile and 180 or 150 -- Cercle plus grand sur mobile
 }
 
--- --- UI LIBRARY (STANDARD V59 BASE) ---
+-- --- UI LIBRARY ---
 local Library = {}
 local UIConfig = {Main = Color3.fromRGB(25, 25, 30), Sidebar = Color3.fromRGB(30, 30, 35), Accent = Color3.fromRGB(0, 140, 255), Text = Color3.fromRGB(240, 240, 240), TextDark = Color3.fromRGB(150, 150, 150), Item = Color3.fromRGB(40, 40, 45)}
 
@@ -62,18 +61,18 @@ function Library:MakeDraggable(gui)
 end
 
 function Library:CreateWindow()
-    if Services.CoreGui:FindFirstChild("Project8888_V60") then Services.CoreGui.Project8888_V60:Destroy() end
-    local Screen = Library:Create("ScreenGui", {Name = "Project8888_V60", Parent = Services.CoreGui, ResetOnSpawn = false, DisplayOrder = 10000})
+    if Services.CoreGui:FindFirstChild("Project8888_V61") then Services.CoreGui.Project8888_V61:Destroy() end
+    local Screen = Library:Create("ScreenGui", {Name = "Project8888_V61", Parent = Services.CoreGui, ResetOnSpawn = false, DisplayOrder = 10000})
     
     local WinSize = IsMobile and UDim2.new(0, 340, 0, 320) or UDim2.new(0, 550, 0, 400)
     local Main = Library:Create("Frame", {Parent = Screen, Size = WinSize, Position = UDim2.new(0.5,0,0.5,0), AnchorPoint = Vector2.new(0.5,0.5), BackgroundColor3 = UIConfig.Main, ClipsDescendants = true, Active = true, Draggable = true})
-    Main.Visible = not IsMobile -- Mobile ouvre avec le bouton
+    Main.Visible = not IsMobile
     Library:Create("UICorner", {Parent = Main, CornerRadius = UDim.new(0, 10)}); Library:Create("UIStroke", {Parent = Main, Color = Color3.fromRGB(50,50,55), Thickness = 1})
 
     local Sidebar = Library:Create("Frame", {Parent = Main, Size = UDim2.new(0, 110, 1, 0), BackgroundColor3 = UIConfig.Sidebar, BorderSizePixel = 0}); Library:Create("UICorner", {Parent = Sidebar, CornerRadius = UDim.new(0, 10)})
     Library:Create("Frame", {Parent = Sidebar, Size = UDim2.new(0, 10, 1, 0), Position = UDim2.new(1,-10,0,0), BackgroundColor3 = UIConfig.Sidebar, BorderSizePixel=0})
     local Title = Library:Create("TextLabel", {Parent = Sidebar, Text = "8.8.8.8", Size = UDim2.new(1, 0, 0, 40), BackgroundTransparency = 1, Font = Enum.Font.GothamBlack, TextSize = 20, TextColor3 = UIConfig.Accent, Position = UDim2.new(0,0,0,10)})
-    Library:Create("TextLabel", {Parent = Title, Text = "HUB V60", Size = UDim2.new(1, 0, 0, 15), Position = UDim2.new(0,0,0.8,0), BackgroundTransparency = 1, Font = Enum.Font.Gotham, TextSize = 10, TextColor3 = UIConfig.TextDark})
+    Library:Create("TextLabel", {Parent = Title, Text = "HUB V61", Size = UDim2.new(1, 0, 0, 15), Position = UDim2.new(0,0,0.8,0), BackgroundTransparency = 1, Font = Enum.Font.Gotham, TextSize = 10, TextColor3 = UIConfig.TextDark})
 
     local TabContainer = Library:Create("Frame", {Parent = Sidebar, Size = UDim2.new(1, 0, 1, -60), Position = UDim2.new(0, 0, 0, 60), BackgroundTransparency = 1}); Library:Create("UIListLayout", {Parent = TabContainer, SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 5)})
     local PagesContainer = Library:Create("Frame", {Parent = Main, Size = UDim2.new(1, -120, 1, -20), Position = UDim2.new(0, 120, 0, 10), BackgroundTransparency = 1})
@@ -127,10 +126,10 @@ function Library:AddSlider(Page, Text, Flag, Min, Max)
     Trig.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then Move(i); local c; c=Services.UserInput.InputChanged:Connect(function(io) if io.UserInputType==Enum.UserInputType.MouseMovement or io.UserInputType==Enum.UserInputType.Touch then Move(io) end end); local r; r=Services.UserInput.InputEnded:Connect(function(io) if io.UserInputType==Enum.UserInputType.MouseButton1 or io.UserInputType==Enum.UserInputType.Touch then c:Disconnect(); r:Disconnect() end end) end end)
 end
 
--- MENU
+-- MENU CONSTRUCTION
 local TabCombat = Library:AddTab("Combat")
-Library:AddToggle(TabCombat, "Auto-Rage (Mobile)", "Aimbot") -- Nom changé pour être clair
-Library:AddSlider(TabCombat, "Smooth (1=Fast)", "Sensitivity", 1, 10) -- 1 = Très rapide
+Library:AddToggle(TabCombat, "Auto-Lock (Mobile)", "Aimbot")
+Library:AddSlider(TabCombat, "Smooth (PC Only)", "Sensitivity", 1, 15)
 Library:AddToggle(TabCombat, "Team Check", "TeamCheck")
 
 local TabVisuals = Library:AddTab("Visuals")
@@ -184,7 +183,7 @@ local function IsAlly(Player)
     return Player.Team == LocalPlayer.Team
 end
 
--- FONCTION WALLCHECK (STRICTE)
+-- WALLCHECK
 local function IsVisible(Part, Ignore)
     local Origin = Camera.CFrame.Position
     local Direction = Part.Position - Origin
@@ -192,14 +191,13 @@ local function IsVisible(Part, Ignore)
     Params.FilterDescendantsInstances = {LocalPlayer.Character, Camera, Ignore}
     Params.FilterType = Enum.RaycastFilterType.Exclude
     local Result = Services.Workspace:Raycast(Origin, Direction, Params)
-    return Result == nil or Result.Instance:IsDescendantOf(Ignore) -- Visible si rien touche ou touche le joueur
+    return Result == nil or Result.Instance:IsDescendantOf(Ignore)
 end
 
 local FOV_Circle = Drawing.new("Circle"); FOV_Circle.Filled=false; FOV_Circle.Thickness=1; FOV_Circle.Color=Color3.new(1,1,1)
 
 Services.RunService.RenderStepped:Connect(function()
     local Mouse = Services.UserInput:GetMouseLocation(); local ScreenSize = Camera.ViewportSize
-    
     local AimPoint = IsMobile and Vector2.new(ScreenSize.X/2, ScreenSize.Y/2) or Mouse
 
     if Settings.Crosshair then
@@ -244,21 +242,13 @@ Services.RunService.RenderStepped:Connect(function()
                 end
             else for _,L in pairs(Draw.Skeleton) do L.Visible=false end end
 
+            -- AIMBOT CHECK
             if Settings.Aimbot then
                 local HeadPos = Camera:WorldToViewportPoint(Head.Position)
                 local DistToCenter = (Vector2.new(HeadPos.X, HeadPos.Y) - AimPoint).Magnitude
                 
-                -- LOGIQUE MOBILE AUTO-LOCK : VERIFIER LA VISIBILITE
                 if DistToCenter < MinDist then
-                    if IsMobile then
-                         -- Mobile : On vérifie si visible pour pas tirer dans les murs
-                         if IsVisible(Head, Player.Character) then
-                             MinDist = DistToCenter; Target = Head
-                         end
-                    else
-                         -- PC : Pas besoin de check ici (Wallbang ou manuel)
-                         MinDist = DistToCenter; Target = Head
-                    end
+                     if IsVisible(Head, Player.Character) then MinDist = DistToCenter; Target = Head end
                 end
             end
         else
@@ -266,27 +256,25 @@ Services.RunService.RenderStepped:Connect(function()
         end
     end
 
+    -- AIMBOT EXECUTION
     if Target then
         if IsMobile and Settings.Aimbot then
-            -- MOBILE : AUTO AIM + AUTO SHOOT
-            local Pos = Camera:WorldToViewportPoint(Target.Position)
-            local RelX = (Pos.X - ScreenSize.X/2) / Settings.Sensitivity
-            local RelY = (Pos.Y - ScreenSize.Y/2) / Settings.Sensitivity
-            mousemoverel(RelX, RelY)
+            -- MOBILE FIX: USE CAMERA CRAME (NO JOYSTICK BUG)
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, Target.Position)
             
-            -- Auto Trigger
+            -- Auto Fire
             if not _G.AF_DB then
                 _G.AF_DB = true
                 pcall(function() mouse1click() end)
                 task.delay(0.1, function() _G.AF_DB = false end)
             end
         elseif not IsMobile and Services.UserInput:IsMouseButtonPressed(Settings.AimKey) and Settings.Aimbot then
-            -- PC : MANUAL
+            -- PC: MOUSEMOVEREL
             local Pos = Camera:WorldToViewportPoint(Target.Position)
             mousemoverel((Pos.X - Mouse.X)/Settings.Sensitivity, (Pos.Y - Mouse.Y)/Settings.Sensitivity)
         end
     end
 end)
 
-Services.CoreGui.ChildRemoved:Connect(function(c) if c.Name=="Project8888_V60" then FOV_Circle:Remove(); CrosshairX:Remove(); CrosshairY:Remove(); for _, D in pairs(Cache) do RemoveDrawings(D) end end end)
-pcall(function() local P=IsMobile and "MOBILE" or "PC"; Services.StarterGui:SetCore("SendNotification", {Title="8.8.8.8 V60", Text="Auto-Rage: "..P, Duration=3}) end)
+Services.CoreGui.ChildRemoved:Connect(function(c) if c.Name=="Project8888_V61" then FOV_Circle:Remove(); CrosshairX:Remove(); CrosshairY:Remove(); for _, D in pairs(Cache) do RemoveDrawings(D) end end end)
+pcall(function() local P=IsMobile and "MOBILE" or "PC"; Services.StarterGui:SetCore("SendNotification", {Title="8.8.8.8 V61", Text="Camera Lock: "..P, Duration=3}) end)
