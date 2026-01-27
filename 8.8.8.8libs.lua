@@ -1,225 +1,210 @@
--- [[ 8.8.8.8 HUB | V2.6 REPAIRED ]] --
--- [[ LIBRARY: GITHUB 8.8.8.8LIBS (ORIGINAL) ]] --
+-- [[ 8.8.8.8 LIBRARY | CLEAN VERSION ]] --
 
+local Library = {}
 local Services = {
     Players = game:GetService("Players"),
-    RunService = game:GetService("RunService"),
+    TweenService = game:GetService("TweenService"),
     UserInput = game:GetService("UserInputService"),
     CoreGui = game:GetService("CoreGui"),
-    Workspace = game:GetService("Workspace"),
-    VirtualUser = game:GetService("VirtualUser"),
-    Stats = game:GetService("Stats")
+    RunService = game:GetService("RunService")
 }
 
 local LocalPlayer = Services.Players.LocalPlayer
-local Camera = Services.Workspace.CurrentCamera
 local IsMobile = not Services.UserInput.KeyboardEnabled
-local DeviceTag = IsMobile and "MOBILE" or "PC"
 
--- ==================================================================
--- [1] CONFIGURATION
--- ==================================================================
-local Settings = {
-    -- Combat
-    Aimbot_PC = not IsMobile,      
-    Aimbot_Mobile = IsMobile,      
-    AimPart = "Head",
-    Sensitivity = 3,
-    AimKey = Enum.UserInputType.MouseButton2,
-    TeamCheck = true,
-    WallCheck = true,
-    FOV_Radius = IsMobile and 180 or 120,
-    ShowFOV = true,
-
-    -- ESP
-    ESP_Enabled = true,
-    ESP_MaxDistance = IsMobile and 1500 or 2500,
-    ESP_FontSize = 11,
-    ESP_Box = true,
-    ESP_Chams = true,
-    ESP_Names = true,
-    ESP_HealthBar = true,
-    ESP_Distance = true, 
-    ESP_Weapon = true,
-    ESP_Snaplines = false,
-
-    -- Player
-    Speed_Active = false, Speed_Value = 16,
-    Jump_Active = false, Jump_Value = 50,
-    FOV_Changer = false, FOV_Value = 90,
-    Watermark = true
+-- UI Colors (Default)
+local UIConfig = {
+    Main = Color3.fromRGB(25, 25, 30),
+    Sidebar = Color3.fromRGB(30, 30, 35),
+    Accent = Color3.fromRGB(119, 120, 255), -- Neon Default
+    Text = Color3.fromRGB(240, 240, 240),
+    TextDark = Color3.fromRGB(150, 150, 150),
+    Item = Color3.fromRGB(40, 40, 45),
+    Hover = Color3.fromRGB(55, 55, 60)
 }
 
--- ==================================================================
--- [2] CHARGEMENT UI (TA LIBRAIRIE GITHUB)
--- ==================================================================
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Ghost66266/robloxLIBS/refs/heads/main/8.8.8.8libs.lua"))()
-if not Library then return end
+function Library:Tween(obj, props, time, style, dir)
+    Services.TweenService:Create(obj, TweenInfo.new(time or 0.3, style or Enum.EasingStyle.Quart, dir or Enum.EasingDirection.Out), props):Play()
+end
 
-local Window = Library:CreateWindow({
-    Name = "8.8.8.8 HUB",
-    Intro = "V1.5 " .. DeviceTag,
-    Color = Color3.fromRGB(119, 120, 255)
-})
+function Library:Create(class, props)
+    local inst = Instance.new(class)
+    for k, v in pairs(props) do inst[k] = v end
+    return inst
+end
 
--- ==================================================================
--- [3] MOBILE TOGGLE BUTTON
--- ==================================================================
-if IsMobile then
-    local ScreenGui = Instance.new("ScreenGui", Services.CoreGui)
-    local ToggleBtn = Instance.new("TextButton", ScreenGui)
-    ToggleBtn.Size = UDim2.new(0, 50, 0, 50); ToggleBtn.Position = UDim2.new(0.1, 0, 0.1, 0)
-    ToggleBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20); ToggleBtn.Text = "8.8.8.8"
-    ToggleBtn.TextColor3 = Color3.fromRGB(119, 120, 255)
-    Instance.new("UICorner", ToggleBtn); Instance.new("UIStroke", ToggleBtn).Color = Color3.fromRGB(119, 120, 255)
-    ToggleBtn.MouseButton1Click:Connect(function() 
-        Services.VirtualUser:SetKeyDown(Enum.KeyCode.RightShift); wait(0.05); Services.VirtualUser:SetKeyUp(Enum.KeyCode.RightShift) 
+function Library:MakeDraggable(gui)
+    local dragging, dragInput, dragStart, startPos
+    gui.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true; dragStart = input.Position; startPos = gui.Position
+            input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
+        end
+    end)
+    gui.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end
+    end)
+    Services.UserInput.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            gui.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
     end)
 end
 
--- ==================================================================
--- [4] MENU TABS
--- ==================================================================
-local TabCombat = Window:AddTab("Combat")
-local TabVisuals = Window:AddTab("Visuals")
-local TabPlayer = Window:AddTab("Player")
-local TabSettings = Window:AddTab("Settings")
+function Library:CreateWindow(Settings)
+    local Name = Settings.Name or "8.8.8.8"
+    local SubTitle = Settings.Intro or "V1.0"
+    UIConfig.Accent = Settings.Color or UIConfig.Accent
 
--- Combat
-if IsMobile then
-    TabCombat:AddToggle("Auto-Lock (Mobile)", true, function(v) Settings.Aimbot_Mobile = v end)
-else
-    TabCombat:AddToggle("Aimbot (PC)", true, function(v) Settings.Aimbot_PC = v end)
-    TabCombat:AddSlider("Smoothness", 1, 15, 3, function(v) Settings.Sensitivity = v end)
-end
-TabCombat:AddToggle("Team Check", true, function(v) Settings.TeamCheck = v end)
-TabCombat:AddToggle("Wall Check (V9)", true, function(v) Settings.WallCheck = v end)
+    -- Nettoyage complet (Nom changé)
+    if Services.CoreGui:FindFirstChild("8888_UI_Main") then Services.CoreGui["8888_UI_Main"]:Destroy() end
+    
+    local Screen = Library:Create("ScreenGui", {Name = "8888_UI_Main", Parent = Services.CoreGui, ResetOnSpawn = false, DisplayOrder = 10000})
+    local WinSize = IsMobile and UDim2.new(0, 340, 0, 320) or UDim2.new(0, 550, 0, 400)
+    
+    local Main = Library:Create("Frame", {
+        Parent = Screen, Size = WinSize, Position = UDim2.new(0.5,0,0.5,0), 
+        AnchorPoint = Vector2.new(0.5,0.5), BackgroundColor3 = UIConfig.Main, 
+        ClipsDescendants = true, Active = true, Draggable = true, Visible = false
+    })
+    
+    local MainScale = Instance.new("UIScale", Main); MainScale.Scale = 0 
 
--- Visuals
-TabVisuals:AddToggle("Master Switch", true, function(v) Settings.ESP_Enabled = v end)
-TabVisuals:AddToggle("Snaplines", false, function(v) Settings.ESP_Snaplines = v end)
-TabVisuals:AddToggle("Box Gradient", true, function(v) Settings.ESP_Box = v end)
-TabVisuals:AddToggle("Chams (Glow)", true, function(v) Settings.ESP_Chams = v end)
-TabVisuals:AddToggle("Names", true, function(v) Settings.ESP_Names = v end)
-TabVisuals:AddSlider("Render Dist", 500, 5000, Settings.ESP_MaxDistance, function(v) Settings.ESP_MaxDistance = v end)
+    Library:Create("UICorner", {Parent = Main, CornerRadius = UDim.new(0, 10)})
+    Library:Create("UIStroke", {Parent = Main, Color = Color3.fromRGB(50,50,55), Thickness = 1})
 
--- Player
-TabPlayer:AddToggle("Speed Hack", false, function(v) Settings.Speed_Active = v end)
-TabPlayer:AddSlider("Value", 16, 200, 16, function(v) Settings.Speed_Value = v end)
-TabPlayer:AddToggle("Jump Hack", false, function(v) Settings.Jump_Active = v end)
-TabPlayer:AddSlider("Value", 50, 300, 50, function(v) Settings.Jump_Value = v end)
-TabPlayer:AddToggle("POV Changer", false, function(v) Settings.FOV_Changer = v end)
-TabPlayer:AddSlider("POV Value", 70, 120, 90, function(v) Settings.FOV_Value = v end)
+    local Sidebar = Library:Create("Frame", {Parent = Main, Size = UDim2.new(0, 110, 1, 0), BackgroundColor3 = UIConfig.Sidebar, BorderSizePixel = 0})
+    Library:Create("UICorner", {Parent = Sidebar, CornerRadius = UDim.new(0, 10)})
+    
+    local TitleLabel = Library:Create("TextLabel", {Parent = Sidebar, Text = Name, Size = UDim2.new(1, 0, 0, 40), BackgroundTransparency = 1, Font = Enum.Font.GothamBlack, TextSize = 18, TextColor3 = UIConfig.Accent, Position = UDim2.new(0,0,0,10)})
+    Library:Create("TextLabel", {Parent = TitleLabel, Text = SubTitle, Size = UDim2.new(1, 0, 0, 15), Position = UDim2.new(0,0,0.8,0), BackgroundTransparency = 1, Font = Enum.Font.Gotham, TextSize = 10, TextColor3 = UIConfig.TextDark})
 
--- Settings
-TabSettings:AddToggle("Show Stats", true, function(v) Settings.Watermark = v end)
-TabSettings:AddToggle("Show FOV", true, function(v) Settings.ShowFOV = v end)
-TabSettings:AddSlider("Radius", 50, 500, Settings.FOV_Radius, function(v) Settings.FOV_Radius = v end)
+    local TabContainer = Library:Create("Frame", {Parent = Sidebar, Size = UDim2.new(1, 0, 1, -60), Position = UDim2.new(0, 0, 0, 60), BackgroundTransparency = 1})
+    Library:Create("UIListLayout", {Parent = TabContainer, SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 5)})
+    local PagesContainer = Library:Create("Frame", {Parent = Main, Size = UDim2.new(1, -120, 1, -20), Position = UDim2.new(0, 120, 0, 10), BackgroundTransparency = 1})
 
--- ==================================================================
--- [5] WATERMARK STATS
--- ==================================================================
-local WatermarkGui = Instance.new("ScreenGui", Services.CoreGui)
-local WFrame = Instance.new("Frame", WatermarkGui)
-WFrame.Size = UDim2.new(0, 250, 0, 26); WFrame.Position = UDim2.new(0.5, -125, 0, 10)
-WFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-Instance.new("UICorner", WFrame); local WStroke = Instance.new("UIStroke", WFrame); WStroke.Color = Color3.fromRGB(119, 120, 255)
-local WText = Instance.new("TextLabel", WFrame)
-WText.Size = UDim2.new(1, 0, 1, 0); WText.BackgroundTransparency = 1; WText.TextColor3 = Color3.new(1,1,1); WText.Font = Enum.Font.Code; WText.TextSize = 12
+    -- Watermark
+    local Card = Library:Create("Frame", {Parent = Screen, Size = UDim2.new(0, 200, 0, 50), Position = UDim2.new(0, 10, 1, -60), BackgroundColor3 = UIConfig.Main, BackgroundTransparency = 0.1, Visible = true})
+    Library:Create("UICorner", {Parent = Card, CornerRadius = UDim.new(0, 8)})
+    Library:Create("UIStroke", {Parent = Card, Color = UIConfig.Item, Thickness = 1})
+    local Avatar = Library:Create("ImageLabel", {Parent = Card, Size = UDim2.new(0, 30, 0, 30), Position = UDim2.new(0, 10, 0.5, -15), BackgroundColor3 = UIConfig.Item, Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"})
+    Library:Create("UICorner", {Parent = Avatar, CornerRadius = UDim.new(1, 0)})
+    task.spawn(function() local c, r = Services.Players:GetUserThumbnailAsync(LocalPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48); if r then Avatar.Image = c end end)
+    Library:Create("TextLabel", {Parent = Card, Text = LocalPlayer.DisplayName, Size = UDim2.new(1, -50, 0, 20), Position = UDim2.new(0, 50, 0, 5), BackgroundTransparency = 1, Font = Enum.Font.GothamBold, TextColor3 = UIConfig.Text, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left})
+    Library:Create("TextLabel", {Parent = Card, Text = "@" .. LocalPlayer.Name, Size = UDim2.new(1, -50, 0, 15), Position = UDim2.new(0, 50, 0, 25), BackgroundTransparency = 1, Font = Enum.Font.Gotham, TextColor3 = UIConfig.TextDark, TextSize = 11, TextXAlignment = Enum.TextXAlignment.Left})
 
-Services.RunService.Heartbeat:Connect(function()
-    if Settings.Watermark then
-        WFrame.Visible = true
-        local fps = math.floor(1 / Services.RunService.RenderStepped:Wait())
-        local ping = math.floor(Services.Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
-        WText.Text = "8.8.8.8 HUB | FPS: "..fps.." | Ping: "..ping.."ms"
-    else WFrame.Visible = false end
-end)
-
--- ==================================================================
--- [6] AIMBOT & WALLCHECK ENGINE
--- ==================================================================
-local function IsVisible(TargetPart)
-    if not Settings.WallCheck then return true end
-    local Parts = Camera:GetPartsObscuringTarget({TargetPart.Position}, {LocalPlayer.Character})
-    for _, Part in pairs(Parts) do
-        if Part.Transparency < 0.3 and Part.CanCollide == true and Part.Name ~= "HumanoidRootPart" then return false end
+    local IsOpen = false
+    local function ToggleMenu()
+        IsOpen = not IsOpen
+        if IsOpen then 
+            Main.Visible = true
+            Library:Tween(MainScale, {Scale = 1}, 0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+        else 
+            Library:Tween(MainScale, {Scale = 0}, 0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+            task.delay(0.3, function() if not IsOpen then Main.Visible = false end end)
+        end
     end
-    return true
-end
+    if not IsMobile then ToggleMenu() end
 
-local FOV_Circle = Drawing.new("Circle"); FOV_Circle.Thickness=1; FOV_Circle.Color=Color3.new(1,1,1)
-Services.RunService.RenderStepped:Connect(function()
-    local Center = IsMobile and Camera.ViewportSize/2 or Services.UserInput:GetMouseLocation()
-    FOV_Circle.Visible = Settings.ShowFOV; FOV_Circle.Radius = Settings.FOV_Radius; FOV_Circle.Position = Center
-    local Target = nil; local MinDist = Settings.FOV_Radius
-    for _, Player in pairs(Services.Players:GetPlayers()) do
-        if Player ~= LocalPlayer and Player.Character and Player.Character:FindFirstChild(Settings.AimPart) then
-            if Settings.TeamCheck and Player.Team == LocalPlayer.Team then continue end
-            local Head = Player.Character[Settings.AimPart]
-            if IsVisible(Head) then
-                local HeadPos, OnScreen = Camera:WorldToViewportPoint(Head.Position)
-                local DistToCenter = (Vector2.new(HeadPos.X, HeadPos.Y) - Center).Magnitude
-                if OnScreen and DistToCenter < MinDist then MinDist = DistToCenter; Target = Head end
+    if IsMobile then
+        local MobBtn = Library:Create("TextButton", {Parent = Screen, Text = "⚙", Size = UDim2.new(0, 50, 0, 50), Position = UDim2.new(0, 20, 0, 50), BackgroundColor3 = UIConfig.Main, TextColor3 = UIConfig.Accent, Font = Enum.Font.GothamBold, TextSize = 26, ZIndex = 1000})
+        Library:Create("UICorner", {Parent = MobBtn, CornerRadius = UDim.new(1,0)})
+        Library:Create("UIStroke", {Parent = MobBtn, Color = UIConfig.Accent, Thickness = 2})
+        Library:MakeDraggable(MobBtn)
+        MobBtn.MouseButton1Click:Connect(ToggleMenu)
+    else
+        Services.UserInput.InputBegan:Connect(function(i,p) if not p and i.KeyCode == Enum.KeyCode.Insert then ToggleMenu() end end)
+    end
+
+    local WindowFunctions = {}
+
+    function WindowFunctions:AddTab(Name)
+        local Page = Library:Create("ScrollingFrame", {Parent = PagesContainer, Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1, ScrollBarThickness = 2, Visible = false, AutomaticCanvasSize = Enum.AutomaticSize.Y, CanvasSize = UDim2.new(0,0,0,0)})
+        Library:Create("UIListLayout", {Parent = Page, SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 8)})
+        Library:Create("UIPadding", {Parent = Page, PaddingTop = UDim.new(0,5), PaddingLeft = UDim.new(0,5)})
+        
+        local Btn = Library:Create("TextButton", {Parent = TabContainer, Size = UDim2.new(1, -10, 0, 35), BackgroundColor3 = UIConfig.Sidebar, Text = Name, Font = Enum.Font.GothamBold, TextColor3 = UIConfig.TextDark, TextSize = 12, AutoButtonColor = false})
+        Library:Create("UICorner", {Parent = Btn, CornerRadius = UDim.new(0, 6)})
+        
+        local function Activate()
+            for _, v in pairs(TabContainer:GetChildren()) do if v:IsA("TextButton") then Library:Tween(v, {TextColor3 = UIConfig.TextDark, BackgroundTransparency = 1}) end end
+            Library:Tween(Btn, {TextColor3 = UIConfig.Accent, BackgroundTransparency = 0.9})
+            for _, v in pairs(PagesContainer:GetChildren()) do v.Visible = false end
+            Page.Visible = true
+            Page.Position = UDim2.new(0,0,0,20)
+            Library:Tween(Page, {Position = UDim2.new(0,0,0,0)}, 0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+        end
+        Btn.MouseButton1Click:Connect(Activate)
+        if #TabContainer:GetChildren() == 2 then Activate() end
+
+        local PageFunctions = {}
+        local function AddAnim(Obj)
+            Obj.MouseEnter:Connect(function() Library:Tween(Obj, {BackgroundColor3 = UIConfig.Hover}, 0.2) end)
+            Obj.MouseLeave:Connect(function() Library:Tween(Obj, {BackgroundColor3 = UIConfig.Item}, 0.2) end)
+            Obj.MouseButton1Down:Connect(function() Library:Tween(Obj, {Size = UDim2.new(1, -15, 0, 38)}, 0.1) end) 
+            Obj.MouseButton1Up:Connect(function() Library:Tween(Obj, {Size = UDim2.new(1, -10, 0, 40)}, 0.1) end)
+        end
+
+        function PageFunctions:AddLabel(Text)
+            local Container = Library:Create("Frame", {Parent = Page, Size = UDim2.new(1, -10, 0, 25), BackgroundTransparency = 1})
+            Library:Create("TextLabel", {Parent = Container, Text = Text, Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1, Font = Enum.Font.GothamBlack, TextColor3 = UIConfig.Accent, TextSize = 14, TextXAlignment = Enum.TextXAlignment.Center})
+        end
+
+        function PageFunctions:AddToggle(Text, Default, Callback)
+            local Toggled = Default or false
+            local Container = Library:Create("TextButton", {Parent = Page, Size = UDim2.new(1, -10, 0, 40), BackgroundColor3 = UIConfig.Item, Text = "", AutoButtonColor = false})
+            Library:Create("UICorner", {Parent = Container, CornerRadius = UDim.new(0, 6)})
+            Library:Create("TextLabel", {Parent = Container, Text = Text, Size = UDim2.new(1, -60, 1, 0), Position = UDim2.new(0, 15, 0, 0), BackgroundTransparency = 1, Font = Enum.Font.GothamSemibold, TextColor3 = UIConfig.Text, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left})
+            local SwitchBg = Library:Create("Frame", {Parent = Container, Size = UDim2.new(0, 40, 0, 20), Position = UDim2.new(1, -50, 0.5, -10), BackgroundColor3 = Color3.fromRGB(60, 60, 65)})
+            Library:Create("UICorner", {Parent = SwitchBg, CornerRadius = UDim.new(1, 0)})
+            local Dot = Library:Create("Frame", {Parent = SwitchBg, Size = UDim2.new(0, 16, 0, 16), Position = UDim2.new(0, 2, 0.5, -8), BackgroundColor3 = Color3.fromRGB(255, 255, 255)})
+            Library:Create("UICorner", {Parent = Dot, CornerRadius = UDim.new(1, 0)})
+            AddAnim(Container)
+            local function Update()
+                if Toggled then 
+                    Library:Tween(SwitchBg, {BackgroundColor3 = UIConfig.Accent})
+                    Library:Tween(Dot, {Position = UDim2.new(1, -18, 0.5, -8)}, 0.3, Enum.EasingStyle.Back)
+                else 
+                    Library:Tween(SwitchBg, {BackgroundColor3 = Color3.fromRGB(60, 60, 65)})
+                    Library:Tween(Dot, {Position = UDim2.new(0, 2, 0.5, -8)}, 0.3, Enum.EasingStyle.Back)
+                end
+                if Callback then Callback(Toggled) end
             end
+            Container.MouseButton1Click:Connect(function() Toggled = not Toggled; Update() end)
+            Update()
         end
-    end
-    if Target then
-        if IsMobile and Settings.Aimbot_Mobile then Camera.CFrame = CFrame.new(Camera.CFrame.Position, Target.Position)
-        elseif not IsMobile and Settings.Aimbot_PC and Services.UserInput:IsMouseButtonPressed(Settings.AimKey) then
-            local Pos = Camera:WorldToViewportPoint(Target.Position)
-            mousemoverel((Pos.X - Center.X)/Settings.Sensitivity, (Pos.Y - Center.Y)/Settings.Sensitivity)
+
+        function PageFunctions:AddSlider(Text, Min, Max, Default, Callback)
+            local Value = Default or Min
+            local Container = Library:Create("Frame", {Parent = Page, Size = UDim2.new(1, -10, 0, 55), BackgroundColor3 = UIConfig.Item})
+            Library:Create("UICorner", {Parent = Container, CornerRadius = UDim.new(0, 6)})
+            Library:Create("TextLabel", {Parent = Container, Text = Text, Size = UDim2.new(1, -10, 0, 25), Position = UDim2.new(0, 15, 0, 0), BackgroundTransparency = 1, Font = Enum.Font.GothamSemibold, TextColor3 = UIConfig.Text, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left})
+            local ValueLabel = Library:Create("TextLabel", {Parent = Container, Text = tostring(Value), Size = UDim2.new(0, 30, 0, 25), Position = UDim2.new(1, -40, 0, 0), BackgroundTransparency = 1, Font = Enum.Font.GothamBold, TextColor3 = UIConfig.Accent, TextSize = 13})
+            local BarBg = Library:Create("Frame", {Parent = Container, Size = UDim2.new(1, -30, 0, 4), Position = UDim2.new(0, 15, 0, 35), BackgroundColor3 = Color3.fromRGB(60, 60, 65)})
+            Library:Create("UICorner", {Parent = BarBg, CornerRadius = UDim.new(1, 0)})
+            local Fill = Library:Create("Frame", {Parent = BarBg, Size = UDim2.new((Value-Min)/(Max-Min), 0, 1, 0), BackgroundColor3 = UIConfig.Accent})
+            Library:Create("UICorner", {Parent = Fill, CornerRadius = UDim.new(1, 0)})
+            local Trigger = Library:Create("TextButton", {Parent = Container, Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1, Text = ""})
+            local function Move(Input)
+                local P = math.clamp((Input.Position.X - BarBg.AbsolutePosition.X) / BarBg.AbsoluteSize.X, 0, 1)
+                local NewValue = math.floor(Min + ((Max - Min) * P))
+                Value = NewValue; ValueLabel.Text = tostring(Value); Library:Tween(Fill, {Size = UDim2.new(P, 0, 1, 0)}, 0.05)
+                if Callback then Callback(Value) end
+            end
+            Trigger.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then Move(i); local c; c=Services.UserInput.InputChanged:Connect(function(io) if io.UserInputType==Enum.UserInputType.MouseMovement or io.UserInputType==Enum.UserInputType.Touch then Move(io) end end); local r; r=Services.UserInput.InputEnded:Connect(function(io) if io.UserInputType==Enum.UserInputType.MouseButton1 or io.UserInputType==Enum.UserInputType.Touch then c:Disconnect(); r:Disconnect() end end) end end)
         end
+
+        function PageFunctions:AddButton(Text, Callback)
+            local Btn = Library:Create("TextButton", {Parent = Page, Size = UDim2.new(1, -10, 0, 40), BackgroundColor3 = UIConfig.Item, Text = "", AutoButtonColor = false})
+            Library:Create("UICorner", {Parent = Btn, CornerRadius = UDim.new(0, 6)})
+            Library:Create("TextLabel", {Parent = Btn, Text = Text, Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1, Font = Enum.Font.GothamSemibold, TextColor3 = UIConfig.Text, TextSize = 13})
+            AddAnim(Btn)
+            Btn.MouseButton1Click:Connect(function() if Callback then Callback() end end)
+        end
+        return PageFunctions
     end
-end)
-
--- ==================================================================
--- [7] ESP ENGINE
--- ==================================================================
-local function Create(Class, Properties)
-    local _Instance = Instance.new(Class); for Property, Value in pairs(Properties) do _Instance[Property] = Value end
-    return _Instance
+    function WindowFunctions:ToggleWatermark(Bool) Card.Visible = Bool end
+    return WindowFunctions
 end
-
-local function AddESP(plr)
-    local SG = Create("ScreenGui", {Parent = Services.CoreGui, Name = plr.Name.."_ESP"})
-    local Name = Create("TextLabel", {Parent = SG, BackgroundTransparency = 1, TextColor3 = Color3.new(1,1,1), Font = Enum.Font.Code, TextSize = 11, Visible = false})
-    local Box = Create("Frame", {Parent = SG, BackgroundColor3 = Color3.new(0,0,0), BackgroundTransparency = 1, BorderSizePixel = 0, Visible = false})
-    local BoxS = Create("UIStroke", {Parent = Box, Thickness = 1.5, Color = Color3.fromRGB(119, 120, 255)})
-    local Cham = Create("Highlight", {Parent = SG, FillColor = Color3.fromRGB(119, 120, 255), FillTransparency = 0.5, Enabled = false})
-    local Snapline = Drawing.new("Line"); Snapline.Thickness = 1.5; Snapline.Color = Color3.fromRGB(119, 120, 255)
-
-    Services.RunService.RenderStepped:Connect(function()
-        if not plr or not plr.Parent or not plr.Character then SG:Destroy(); Snapline:Remove(); return end
-        local Char = plr.Character; local Root = Char:FindFirstChild("HumanoidRootPart")
-        local Hum = Char:FindFirstChild("Humanoid")
-        local Enemy = true; if Settings.TeamCheck and plr.Team == LocalPlayer.Team then Enemy = false end
-        if Settings.ESP_Enabled and Root and Hum and Hum.Health > 0 and Enemy then
-            local Pos, OnScreen = Camera:WorldToScreenPoint(Root.Position)
-            local Dist = (Camera.CFrame.Position - Root.Position).Magnitude
-            if OnScreen and Dist < Settings.ESP_MaxDistance then
-                local Size = 2000 / Dist; local BoxPos = Vector2.new(Pos.X - Size/2, Pos.Y - Size/2)
-                if Settings.ESP_Box then Box.Visible=true; Box.Position=UDim2.new(0,BoxPos.X,0,BoxPos.Y); Box.Size=UDim2.new(0,Size,0,Size) else Box.Visible=false end
-                if Settings.ESP_Names then Name.Visible=true; Name.Position=UDim2.new(0,Pos.X-50,0,BoxPos.Y-15); Name.Text=plr.Name.." ["..math.floor(Dist/3).."m]" else Name.Visible=false end
-                if Settings.ESP_Chams then Cham.Adornee=Char; Cham.Enabled=true else Cham.Enabled=false end
-                if Settings.ESP_Snaplines then Snapline.Visible = true; Snapline.From = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y); Snapline.To = Vector2.new(Pos.X, Pos.Y) else Snapline.Visible = false end
-            else Box.Visible=false; Name.Visible=false; Cham.Enabled=false; Snapline.Visible=false end
-        else Box.Visible=false; Name.Visible=false; Cham.Enabled=false; Snapline.Visible=false end
-    end)
-end
-for _, p in pairs(Services.Players:GetPlayers()) do if p ~= LocalPlayer then AddESP(p) end end
-Services.Players.PlayerAdded:Connect(AddESP)
-
--- ==================================================================
--- [8] PLAYER ENGINE
--- ==================================================================
-Services.RunService.Stepped:Connect(function()
-    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-        local Hum = LocalPlayer.Character.Humanoid
-        if Settings.Speed_Active then Hum.WalkSpeed = Settings.Speed_Value end
-        if Settings.Jump_Active then Hum.UseJumpPower = true; Hum.JumpPower = Settings.Jump_Value end
-    end
-    if Settings.FOV_Changer then Camera.FieldOfView = Settings.FOV_Value end
-end)
-
-pcall(function() Services.StarterGui:SetCore("SendNotification", {Title="8.8.8.8 V2.6", Text="FIXED & READY", Duration=3}) end)
+return Library
