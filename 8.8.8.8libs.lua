@@ -206,6 +206,26 @@ function VulcanUI:CreateWindow(Config)
         end
     end)
 
+    -- ==========================================
+    -- NOUVEAU : TOUCHE INSERT POUR OUVRIR/FERMER
+    -- ==========================================
+    local menuOpen = true
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if not gameProcessed and input.KeyCode == Enum.KeyCode.Insert then
+            menuOpen = not menuOpen
+            if menuOpen then
+                MainFrame.Visible = true
+                Tween(MainFrame, {Size = UDim2.new(0, 600, 0, 400)}, 0.4, Enum.EasingStyle.Back)
+                Shadow.Visible = true
+            else
+                local shrink = Tween(MainFrame, {Size = UDim2.new(0, 400, 0, 0)}, 0.3)
+                Shadow.Visible = false
+                shrink.Completed:Wait()
+                MainFrame.Visible = false
+            end
+        end
+    end)
+    
     local WindowObj = { CurrentTab = nil }
     
     function WindowObj:CreateTab(TabName)
