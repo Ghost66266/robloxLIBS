@@ -1,5 +1,5 @@
 -- ======================================================================
--- VULCAN UI LIBRARY - MASTER EDITION (ROUGE ANIMÉ)
+-- VULCAN UI LIBRARY - MASTER EDITION (ROUGE ANIMÉ + SLIDERS + INSERT)
 -- ======================================================================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
@@ -191,7 +191,7 @@ function VulcanUI:CreateWindow(Config)
     Tween(MainFrame, {Size = UDim2.new(0, 600, 0, 400)}, 0.5)
     Tween(Shadow, {ImageTransparency = 0.4}, 0.5)
 
-    -- Touche Insert pour Cacher/Afficher
+    -- SYSTÈME D'OUVERTURE / FERMETURE AVEC INSERT
     local menuOpen = true
     UserInputService.InputBegan:Connect(function(input, gp)
         if not gp and input.KeyCode == Enum.KeyCode.Insert then
@@ -209,7 +209,7 @@ function VulcanUI:CreateWindow(Config)
         end
     end)
 
-    -- Dragging
+    -- DRAG
     local dragging, dragInput, dragStart, startPos
     Title.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -274,7 +274,6 @@ function VulcanUI:CreateWindow(Config)
         end
 
         TabButton.MouseButton1Click:Connect(SelectTab)
-
         if not WindowObj.CurrentTab then SelectTab() end
 
         local Elements = {}
