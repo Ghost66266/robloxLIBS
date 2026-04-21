@@ -1,5 +1,5 @@
 -- ======================================================================
--- VULCAN UI LIBRARY - ANIMATED RED EDITION
+-- VULCAN UI LIBRARY - FULL COMPATIBILITY & ANIMATED RED EDITION
 -- ======================================================================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
@@ -224,6 +224,7 @@ function VulcanUI:CreateWindow(Config)
         Page.Position = UDim2.new(0, 10, 0, 10)
         Page.BackgroundTransparency = 1
         Page.ScrollBarThickness = 2
+        Page.ScrollBarImageColor3 = Theme.Accent
         Page.Visible = false
         Page.Parent = PageContainer
         
@@ -231,14 +232,19 @@ function VulcanUI:CreateWindow(Config)
         PageLayout.Padding = UDim.new(0, 8)
         PageLayout.Parent = Page
 
-        TabButton.MouseButton1Click:Connect(function()
+        -- CORRECTIF : Mise à jour automatique de la taille de la page pour le défilement
+        PageLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            Page.CanvasSize = UDim2.new(0, 0, 0, PageLayout.AbsoluteContentSize.Y + 20)
+        end)
+
+        -- Fonction d'ouverture d'onglet propre (remplace le :Fire buggé)
+        local function SelectTab()
             if WindowObj.CurrentTab == Page then return end
             if WindowObj.CurrentTab then WindowObj.CurrentTab.Visible = false end
             
             WindowObj.CurrentTab = Page
             Page.Visible = true
             
-            -- ANIMATION DE TRANSITION (Glisse depuis la droite + Pop)
             Page.Position = UDim2.new(0, 50, 0, 10)
             Tween(Page, {Position = UDim2.new(0, 10, 0, 10)}, 0.4, Enum.EasingStyle.Quint)
 
@@ -248,10 +254,13 @@ function VulcanUI:CreateWindow(Config)
                 end
             end
             Tween(TabButton, {BackgroundColor3 = Theme.HoverBG, TextColor3 = Theme.Accent}, 0.2)
-        end)
+        end
 
+        TabButton.MouseButton1Click:Connect(SelectTab)
+
+        -- CORRECTIF : Exécute la fonction directement au lieu de simuler un clic
         if not WindowObj.CurrentTab then
-            TabButton.MouseButton1Click:Fire()
+            SelectTab()
         end
 
         local Elements = {}
@@ -269,22 +278,20 @@ function VulcanUI:CreateWindow(Config)
             AddCorner(Button, 6)
             local Stroke = AddStroke(Button, Theme.Background, 1)
             
-            -- UIScale pour l'effet de pop/bounce
             local ScaleObj = Instance.new("UIScale", Button)
 
             Button.MouseEnter:Connect(function()
                 Tween(Button, {BackgroundColor3 = Theme.HoverBG}, 0.2)
                 Tween(Stroke, {Color = Theme.Accent}, 0.2)
-                Tween(ScaleObj, {Scale = 1.02}, 0.2) -- Grossit au survol
+                Tween(ScaleObj, {Scale = 1.02}, 0.2)
             end)
             Button.MouseLeave:Connect(function()
                 Tween(Button, {BackgroundColor3 = Theme.ElementBG}, 0.2)
                 Tween(Stroke, {Color = Theme.Background}, 0.2)
-                Tween(ScaleObj, {Scale = 1}, 0.2) -- Revient à la normale
+                Tween(ScaleObj, {Scale = 1}, 0.2)
             end)
 
             Button.MouseButton1Click:Connect(function()
-                -- Effet Bounce au clic
                 ScaleObj.Scale = 0.94
                 Tween(ScaleObj, {Scale = 1.02}, 0.3, Enum.EasingStyle.Back)
                 callback()
