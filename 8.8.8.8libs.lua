@@ -1,27 +1,24 @@
 -- ======================================================================
--- VULCAN UI LIBRARY - RED EDITION
+-- VULCAN UI LIBRARY - ANIMATED RED EDITION
 -- ======================================================================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
 
--- Protection pour Studio / Exécuteur
 local TargetGui = (pcall(function() return CoreGui end) and CoreGui) or game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
 local VulcanUI = {}
 
--- Thème Vulcan (Rouge et Sombre)
 local Theme = {
     Background = Color3.fromRGB(12, 12, 12),
     Sidebar = Color3.fromRGB(18, 18, 18),
-    Accent = Color3.fromRGB(255, 0, 0), -- VULCAN RED
+    Accent = Color3.fromRGB(255, 0, 0),
     Text = Color3.fromRGB(240, 240, 240),
     TextDim = Color3.fromRGB(130, 130, 130),
     ElementBG = Color3.fromRGB(25, 25, 25),
-    HoverBG = Color3.fromRGB(40, 20, 20) -- Rouge très sombre pour le survol
+    HoverBG = Color3.fromRGB(40, 20, 20)
 }
 
--- Fonctions utilitaires
 local function Tween(instance, properties, duration, style)
     style = style or Enum.EasingStyle.Quint
     local tween = TweenService:Create(instance, TweenInfo.new(duration, style, Enum.EasingDirection.Out), properties)
@@ -44,19 +41,16 @@ local function AddStroke(instance, color, thickness)
     return stroke
 end
 
--- ======================================================================
--- 1. ÉCRAN DE CHARGEMENT ANIMÉ (FULL SCREEN)
--- ======================================================================
 function VulcanUI:ShowLoading(textString)
     local LoadingGui = Instance.new("ScreenGui")
     LoadingGui.Name = "VulcanLoader"
-    LoadingGui.IgnoreGuiInset = true -- TRÈS IMPORTANT : Prend TOUT l'écran, même la barre du haut
+    LoadingGui.IgnoreGuiInset = true
     LoadingGui.ResetOnSpawn = false
     LoadingGui.Parent = TargetGui
 
     local Background = Instance.new("Frame")
     Background.Size = UDim2.new(1, 0, 1, 0)
-    Background.BackgroundColor3 = Color3.fromRGB(5, 5, 5) -- Presque noir absolu
+    Background.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
     Background.BorderSizePixel = 0
     Background.Parent = LoadingGui
 
@@ -70,30 +64,22 @@ function VulcanUI:ShowLoading(textString)
     LoadingText.TextSize = 50
     LoadingText.Parent = Background
 
-    -- Animation lettre par lettre
     local displayedText = ""
     for i = 1, #textString do
         displayedText = displayedText .. string.sub(textString, i, i)
         LoadingText.Text = displayedText
-        
         LoadingText.TextSize = 65
         Tween(LoadingText, {TextSize = 55}, 0.2)
-        task.wait(0.15)
+        task.wait(0.12)
     end
 
-    task.wait(0.6) -- Pause quand le mot est fini
-
-    -- Fade Out
+    task.wait(0.6)
     local fadeBg = Tween(Background, {BackgroundTransparency = 1}, 0.5)
-    local fadeTxt = Tween(LoadingText, {TextTransparency = 1}, 0.5)
-    
-    fadeBg.Completed:Wait() -- Attend que l'animation finisse
+    Tween(LoadingText, {TextTransparency = 1}, 0.5)
+    fadeBg.Completed:Wait()
     LoadingGui:Destroy()
 end
 
--- ======================================================================
--- 2. SYSTÈME DE NOTIFICATIONS
--- ======================================================================
 function VulcanUI:Notify(message)
     local NotifGui = TargetGui:FindFirstChild("VulcanNotifGui")
     if not NotifGui then
@@ -105,11 +91,11 @@ function VulcanUI:Notify(message)
 
     local NotifFrame = Instance.new("Frame")
     NotifFrame.Size = UDim2.new(0, 260, 0, 60)
-    NotifFrame.Position = UDim2.new(1, 20, 1, -80) -- Caché à droite
+    NotifFrame.Position = UDim2.new(1, 20, 1, -80)
     NotifFrame.BackgroundColor3 = Theme.Sidebar
     NotifFrame.Parent = NotifGui
     AddCorner(NotifFrame, 6)
-    AddStroke(NotifFrame, Theme.Accent, 1) -- Contour rouge
+    AddStroke(NotifFrame, Theme.Accent, 1)
 
     local TextLabel = Instance.new("TextLabel")
     TextLabel.Size = UDim2.new(1, -20, 1, -10)
@@ -123,10 +109,8 @@ function VulcanUI:Notify(message)
     TextLabel.TextXAlignment = Enum.TextXAlignment.Left
     TextLabel.Parent = NotifFrame
 
-    -- Animation d'entrée
-    Tween(NotifFrame, {Position = UDim2.new(1, -280, 1, -80)}, 0.4)
+    Tween(NotifFrame, {Position = UDim2.new(1, -280, 1, -80)}, 0.4, Enum.EasingStyle.Back)
 
-    -- Disparition auto
     spawn(function()
         task.wait(4)
         local exit = Tween(NotifFrame, {Position = UDim2.new(1, 20, 1, -80), BackgroundTransparency = 1}, 0.4)
@@ -137,18 +121,13 @@ function VulcanUI:Notify(message)
     end)
 end
 
--- ======================================================================
--- 3. CRÉATION DU MENU (WINDOW)
--- ======================================================================
 function VulcanUI:CreateWindow(Config)
     local TitleText = Config.Name or "Vulcan"
-    
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "VulcanMenu"
     ScreenGui.ResetOnSpawn = false
     ScreenGui.Parent = TargetGui
 
-    -- Ombre 3D
     local Shadow = Instance.new("ImageLabel")
     Shadow.AnchorPoint = Vector2.new(0.5, 0.5)
     Shadow.Position = UDim2.new(0.5, 0, 0.5, 0)
@@ -169,7 +148,7 @@ function VulcanUI:CreateWindow(Config)
     MainFrame.ClipsDescendants = true
     MainFrame.Parent = Shadow
     AddCorner(MainFrame, 6)
-    AddStroke(MainFrame, Theme.Accent, 2) -- Contour Néon Rouge Épais
+    AddStroke(MainFrame, Theme.Accent, 2)
 
     local Sidebar = Instance.new("Frame")
     Sidebar.Size = UDim2.new(0, 140, 1, 0)
@@ -202,28 +181,24 @@ function VulcanUI:CreateWindow(Config)
     PageContainer.Size = UDim2.new(1, -140, 1, 0)
     PageContainer.Position = UDim2.new(0, 140, 0, 0)
     PageContainer.BackgroundTransparency = 1
+    PageContainer.ClipsDescendants = true
     PageContainer.Parent = MainFrame
 
-    -- Animation d'ouverture
     MainFrame.Size = UDim2.new(0, 500, 0, 300)
+    local initScale = Instance.new("UIScale", MainFrame)
+    initScale.Scale = 0.8
+    Tween(initScale, {Scale = 1}, 0.5, Enum.EasingStyle.Back)
     Tween(MainFrame, {Size = UDim2.new(0, 600, 0, 400)}, 0.5)
     Tween(Shadow, {ImageTransparency = 0.4}, 0.5)
 
-    -- Système de Drag
     local dragging, dragInput, dragStart, startPos
     Title.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            dragStart = input.Position
-            startPos = Shadow.Position
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then dragging = false end
-            end)
+            dragging = true; dragStart = input.Position; startPos = Shadow.Position
+            input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
         end
     end)
-    Title.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput = input end
-    end)
+    Title.InputChanged:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput = input end end)
     UserInputService.InputChanged:Connect(function(input)
         if input == dragInput and dragging then
             local delta = input.Position - dragStart
@@ -233,9 +208,6 @@ function VulcanUI:CreateWindow(Config)
 
     local WindowObj = { CurrentTab = nil }
     
-    -- ======================================================================
-    -- 4. CRÉATION DES ONGLETS ET BOUTONS
-    -- ======================================================================
     function WindowObj:CreateTab(TabName)
         local TabButton = Instance.new("TextButton")
         TabButton.Size = UDim2.new(0.9, 0, 0, 35)
@@ -260,12 +232,15 @@ function VulcanUI:CreateWindow(Config)
         PageLayout.Parent = Page
 
         TabButton.MouseButton1Click:Connect(function()
+            if WindowObj.CurrentTab == Page then return end
             if WindowObj.CurrentTab then WindowObj.CurrentTab.Visible = false end
+            
             WindowObj.CurrentTab = Page
             Page.Visible = true
             
-            Page.Position = UDim2.new(0, 10, 0, 20)
-            Tween(Page, {Position = UDim2.new(0, 10, 0, 10)}, 0.3)
+            -- ANIMATION DE TRANSITION (Glisse depuis la droite + Pop)
+            Page.Position = UDim2.new(0, 50, 0, 10)
+            Tween(Page, {Position = UDim2.new(0, 10, 0, 10)}, 0.4, Enum.EasingStyle.Quint)
 
             for _, btn in pairs(TabContainer:GetChildren()) do
                 if btn:IsA("TextButton") then
@@ -293,17 +268,25 @@ function VulcanUI:CreateWindow(Config)
             Button.Parent = Page
             AddCorner(Button, 6)
             local Stroke = AddStroke(Button, Theme.Background, 1)
+            
+            -- UIScale pour l'effet de pop/bounce
+            local ScaleObj = Instance.new("UIScale", Button)
 
             Button.MouseEnter:Connect(function()
                 Tween(Button, {BackgroundColor3 = Theme.HoverBG}, 0.2)
                 Tween(Stroke, {Color = Theme.Accent}, 0.2)
+                Tween(ScaleObj, {Scale = 1.02}, 0.2) -- Grossit au survol
             end)
             Button.MouseLeave:Connect(function()
                 Tween(Button, {BackgroundColor3 = Theme.ElementBG}, 0.2)
                 Tween(Stroke, {Color = Theme.Background}, 0.2)
+                Tween(ScaleObj, {Scale = 1}, 0.2) -- Revient à la normale
             end)
 
             Button.MouseButton1Click:Connect(function()
+                -- Effet Bounce au clic
+                ScaleObj.Scale = 0.94
+                Tween(ScaleObj, {Scale = 1.02}, 0.3, Enum.EasingStyle.Back)
                 callback()
             end)
         end
@@ -331,6 +314,7 @@ function VulcanUI:CreateWindow(Config)
             ToggleBtn.Position = UDim2.new(1, -50, 0.5, -10)
             ToggleBtn.BackgroundColor3 = Theme.Background
             ToggleBtn.Text = ""
+            ToggleBtn.AutoButtonColor = false
             ToggleBtn.Parent = ToggleFrame
             AddCorner(ToggleBtn, 10)
             AddStroke(ToggleBtn, Theme.TextDim, 1)
@@ -341,16 +325,35 @@ function VulcanUI:CreateWindow(Config)
             Circle.BackgroundColor3 = Theme.TextDim
             Circle.Parent = ToggleBtn
             AddCorner(Circle, 8)
+            
+            local ScaleObj = Instance.new("UIScale", ToggleFrame)
+
+            ToggleFrame.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseMovement then
+                    Tween(ScaleObj, {Scale = 1.01}, 0.2)
+                end
+            end)
+            ToggleFrame.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseMovement then
+                    Tween(ScaleObj, {Scale = 1}, 0.2)
+                end
+            end)
 
             local enabled = false
             ToggleBtn.MouseButton1Click:Connect(function()
                 enabled = not enabled
+                
+                ScaleObj.Scale = 0.96
+                Tween(ScaleObj, {Scale = 1.01}, 0.3, Enum.EasingStyle.Back)
+
                 if enabled then
-                    Tween(Circle, {Position = UDim2.new(1, -18, 0.5, -8), BackgroundColor3 = Theme.Accent}, 0.3)
+                    Tween(Circle, {Position = UDim2.new(1, -18, 0.5, -8), BackgroundColor3 = Theme.Accent}, 0.3, Enum.EasingStyle.Back)
                     Tween(ToggleBtn.UIStroke, {Color = Theme.Accent}, 0.3)
+                    Tween(ToggleText, {TextColor3 = Theme.Accent}, 0.3)
                 else
-                    Tween(Circle, {Position = UDim2.new(0, 2, 0.5, -8), BackgroundColor3 = Theme.TextDim}, 0.3)
+                    Tween(Circle, {Position = UDim2.new(0, 2, 0.5, -8), BackgroundColor3 = Theme.TextDim}, 0.3, Enum.EasingStyle.Back)
                     Tween(ToggleBtn.UIStroke, {Color = Theme.TextDim}, 0.3)
+                    Tween(ToggleText, {TextColor3 = Theme.Text}, 0.3)
                 end
                 callback(enabled)
             end)
