@@ -1,41 +1,40 @@
 -- ======================================================================
--- FUTUR UI LIBRARY - FIVEM STYLE (CORE ENGINE)
+-- VULCAN UI LIBRARY - RED EDITION
 -- ======================================================================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
 
-local FuturUI = {}
+-- Protection pour Studio / Exécuteur
+local TargetGui = (pcall(function() return CoreGui end) and CoreGui) or game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
--- Styles et Couleurs par défaut (Thème Cyber/FiveM)
+local VulcanUI = {}
+
+-- Thème Vulcan (Rouge et Sombre)
 local Theme = {
-    Background = Color3.fromRGB(15, 15, 20), -- Sombre translucide
-    Sidebar = Color3.fromRGB(20, 20, 25),
-    Accent = Color3.fromRGB(120, 50, 255), -- Violet Néon (Style TZX)
+    Background = Color3.fromRGB(12, 12, 12),
+    Sidebar = Color3.fromRGB(18, 18, 18),
+    Accent = Color3.fromRGB(255, 0, 0), -- VULCAN RED
     Text = Color3.fromRGB(240, 240, 240),
-    TextDim = Color3.fromRGB(150, 150, 150),
-    ElementBG = Color3.fromRGB(30, 30, 35),
-    HoverBG = Color3.fromRGB(45, 45, 55)
+    TextDim = Color3.fromRGB(130, 130, 130),
+    ElementBG = Color3.fromRGB(25, 25, 25),
+    HoverBG = Color3.fromRGB(40, 20, 20) -- Rouge très sombre pour le survol
 }
 
--- Fonction utilitaire pour les animations fluides
+-- Fonctions utilitaires
 local function Tween(instance, properties, duration, style)
     style = style or Enum.EasingStyle.Quint
-    local tweenInfo = TweenInfo.new(duration, style, Enum.EasingDirection.Out)
-    local tween = TweenService:Create(instance, tweenInfo, properties)
+    local tween = TweenService:Create(instance, TweenInfo.new(duration, style, Enum.EasingDirection.Out), properties)
     tween:Play()
     return tween
 end
 
--- Fonction pour créer des coins arrondis
 local function AddCorner(instance, radius)
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, radius)
     corner.Parent = instance
-    return corner
 end
 
--- Fonction pour créer un contour Néon (Effet 3D/Futuriste)
 local function AddStroke(instance, color, thickness)
     local stroke = Instance.new("UIStroke")
     stroke.Color = color
@@ -46,47 +45,134 @@ local function AddStroke(instance, color, thickness)
 end
 
 -- ======================================================================
--- CREATION DE LA FENETRE PRINCIPALE
+-- 1. ÉCRAN DE CHARGEMENT ANIMÉ (FULL SCREEN)
 -- ======================================================================
-function FuturUI:CreateWindow(Config)
-    local TitleText = Config.Name or "Futur Menu"
+function VulcanUI:ShowLoading(textString)
+    local LoadingGui = Instance.new("ScreenGui")
+    LoadingGui.Name = "VulcanLoader"
+    LoadingGui.IgnoreGuiInset = true -- TRÈS IMPORTANT : Prend TOUT l'écran, même la barre du haut
+    LoadingGui.ResetOnSpawn = false
+    LoadingGui.Parent = TargetGui
+
+    local Background = Instance.new("Frame")
+    Background.Size = UDim2.new(1, 0, 1, 0)
+    Background.BackgroundColor3 = Color3.fromRGB(5, 5, 5) -- Presque noir absolu
+    Background.BorderSizePixel = 0
+    Background.Parent = LoadingGui
+
+    local LoadingText = Instance.new("TextLabel")
+    LoadingText.Size = UDim2.new(1, 0, 0, 100)
+    LoadingText.Position = UDim2.new(0, 0, 0.5, -50)
+    LoadingText.BackgroundTransparency = 1
+    LoadingText.Text = ""
+    LoadingText.TextColor3 = Theme.Accent
+    LoadingText.Font = Enum.Font.GothamBlack
+    LoadingText.TextSize = 50
+    LoadingText.Parent = Background
+
+    -- Animation lettre par lettre
+    local displayedText = ""
+    for i = 1, #textString do
+        displayedText = displayedText .. string.sub(textString, i, i)
+        LoadingText.Text = displayedText
+        
+        LoadingText.TextSize = 65
+        Tween(LoadingText, {TextSize = 55}, 0.2)
+        task.wait(0.15)
+    end
+
+    task.wait(0.6) -- Pause quand le mot est fini
+
+    -- Fade Out
+    local fadeBg = Tween(Background, {BackgroundTransparency = 1}, 0.5)
+    local fadeTxt = Tween(LoadingText, {TextTransparency = 1}, 0.5)
+    
+    fadeBg.Completed:Wait() -- Attend que l'animation finisse
+    LoadingGui:Destroy()
+end
+
+-- ======================================================================
+-- 2. SYSTÈME DE NOTIFICATIONS
+-- ======================================================================
+function VulcanUI:Notify(message)
+    local NotifGui = TargetGui:FindFirstChild("VulcanNotifGui")
+    if not NotifGui then
+        NotifGui = Instance.new("ScreenGui")
+        NotifGui.Name = "VulcanNotifGui"
+        NotifGui.ResetOnSpawn = false
+        NotifGui.Parent = TargetGui
+    end
+
+    local NotifFrame = Instance.new("Frame")
+    NotifFrame.Size = UDim2.new(0, 260, 0, 60)
+    NotifFrame.Position = UDim2.new(1, 20, 1, -80) -- Caché à droite
+    NotifFrame.BackgroundColor3 = Theme.Sidebar
+    NotifFrame.Parent = NotifGui
+    AddCorner(NotifFrame, 6)
+    AddStroke(NotifFrame, Theme.Accent, 1) -- Contour rouge
+
+    local TextLabel = Instance.new("TextLabel")
+    TextLabel.Size = UDim2.new(1, -20, 1, -10)
+    TextLabel.Position = UDim2.new(0, 10, 0, 5)
+    TextLabel.BackgroundTransparency = 1
+    TextLabel.Text = message
+    TextLabel.TextColor3 = Theme.Text
+    TextLabel.Font = Enum.Font.GothamBold
+    TextLabel.TextSize = 14
+    TextLabel.TextWrapped = true
+    TextLabel.TextXAlignment = Enum.TextXAlignment.Left
+    TextLabel.Parent = NotifFrame
+
+    -- Animation d'entrée
+    Tween(NotifFrame, {Position = UDim2.new(1, -280, 1, -80)}, 0.4)
+
+    -- Disparition auto
+    spawn(function()
+        task.wait(4)
+        local exit = Tween(NotifFrame, {Position = UDim2.new(1, 20, 1, -80), BackgroundTransparency = 1}, 0.4)
+        Tween(TextLabel, {TextTransparency = 1}, 0.4)
+        Tween(NotifFrame.UIStroke, {Transparency = 1}, 0.4)
+        exit.Completed:Wait()
+        NotifFrame:Destroy()
+    end)
+end
+
+-- ======================================================================
+-- 3. CRÉATION DU MENU (WINDOW)
+-- ======================================================================
+function VulcanUI:CreateWindow(Config)
+    local TitleText = Config.Name or "Vulcan"
     
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "FuturUI_" .. math.random(1000, 9999)
+    ScreenGui.Name = "VulcanMenu"
     ScreenGui.ResetOnSpawn = false
-    ScreenGui.Parent = CoreGui
-    
-    -- Le DropShadow (Effet 3D derrière la fenêtre)
+    ScreenGui.Parent = TargetGui
+
+    -- Ombre 3D
     local Shadow = Instance.new("ImageLabel")
-    Shadow.Name = "DropShadow"
     Shadow.AnchorPoint = Vector2.new(0.5, 0.5)
     Shadow.Position = UDim2.new(0.5, 0, 0.5, 0)
     Shadow.Size = UDim2.new(0, 640, 0, 440)
     Shadow.BackgroundTransparency = 1
     Shadow.Image = "rbxassetid://6015897843"
     Shadow.ImageColor3 = Color3.new(0, 0, 0)
-    Shadow.ImageTransparency = 0.5
+    Shadow.ImageTransparency = 1
     Shadow.SliceCenter = Rect.new(49, 49, 450, 450)
     Shadow.ScaleType = Enum.ScaleType.Slice
-    Shadow.SliceScale = 1
     Shadow.Parent = ScreenGui
 
-    -- Main Frame (La fenêtre principale)
     local MainFrame = Instance.new("Frame")
-    MainFrame.Name = "MainFrame"
     MainFrame.Size = UDim2.new(0, 600, 0, 400)
     MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
     MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
     MainFrame.BackgroundColor3 = Theme.Background
-    MainFrame.BackgroundTransparency = 0.1 -- Effet verre
     MainFrame.ClipsDescendants = true
     MainFrame.Parent = Shadow
-    AddCorner(MainFrame, 8)
-    AddStroke(MainFrame, Theme.Accent, 1.5) -- Contour Néon
+    AddCorner(MainFrame, 6)
+    AddStroke(MainFrame, Theme.Accent, 2) -- Contour Néon Rouge Épais
 
-    -- Sidebar (Menu de gauche)
     local Sidebar = Instance.new("Frame")
-    Sidebar.Size = UDim2.new(0, 150, 1, 0)
+    Sidebar.Size = UDim2.new(0, 140, 1, 0)
     Sidebar.BackgroundColor3 = Theme.Sidebar
     Sidebar.BorderSizePixel = 0
     Sidebar.Parent = MainFrame
@@ -112,22 +198,18 @@ function FuturUI:CreateWindow(Config)
     TabListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     TabListLayout.Parent = TabContainer
 
-    -- Conteneur des pages
     local PageContainer = Instance.new("Frame")
-    PageContainer.Size = UDim2.new(1, -150, 1, 0)
-    PageContainer.Position = UDim2.new(0, 150, 0, 0)
+    PageContainer.Size = UDim2.new(1, -140, 1, 0)
+    PageContainer.Position = UDim2.new(0, 140, 0, 0)
     PageContainer.BackgroundTransparency = 1
     PageContainer.Parent = MainFrame
 
-    -- Animation d'ouverture (Effet Pop 3D)
-    MainFrame.Size = UDim2.new(0, 550, 0, 350)
-    MainFrame.Rotation = -2
-    Shadow.ImageTransparency = 1
-    
-    Tween(MainFrame, {Size = UDim2.new(0, 600, 0, 400), Rotation = 0}, 0.6, Enum.EasingStyle.Exponential)
-    Tween(Shadow, {ImageTransparency = 0.5}, 0.6)
+    -- Animation d'ouverture
+    MainFrame.Size = UDim2.new(0, 500, 0, 300)
+    Tween(MainFrame, {Size = UDim2.new(0, 600, 0, 400)}, 0.5)
+    Tween(Shadow, {ImageTransparency = 0.4}, 0.5)
 
-    -- Système de Drag (Déplacement propre)
+    -- Système de Drag
     local dragging, dragInput, dragStart, startPos
     Title.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -149,27 +231,22 @@ function FuturUI:CreateWindow(Config)
         end
     end)
 
-    -- Objet Window retourné pour créer les onglets
-    local Window = {
-        CurrentTab = nil
-    }
+    local WindowObj = { CurrentTab = nil }
     
     -- ======================================================================
-    -- CREATION DES ONGLETS (TABS)
+    -- 4. CRÉATION DES ONGLETS ET BOUTONS
     -- ======================================================================
-    function Window:CreateTab(TabName)
-        -- Le bouton dans la Sidebar
+    function WindowObj:CreateTab(TabName)
         local TabButton = Instance.new("TextButton")
         TabButton.Size = UDim2.new(0.9, 0, 0, 35)
         TabButton.BackgroundColor3 = Theme.Sidebar
         TabButton.Text = TabName
         TabButton.Font = Enum.Font.GothamBold
         TabButton.TextColor3 = Theme.TextDim
-        TabButton.TextSize = 14
+        TabButton.TextSize = 13
         TabButton.Parent = TabContainer
         AddCorner(TabButton, 6)
         
-        -- La page contenant les éléments
         local Page = Instance.new("ScrollingFrame")
         Page.Size = UDim2.new(1, -20, 1, -20)
         Page.Position = UDim2.new(0, 10, 0, 10)
@@ -179,55 +256,34 @@ function FuturUI:CreateWindow(Config)
         Page.Parent = PageContainer
         
         local PageLayout = Instance.new("UIListLayout")
-        PageLayout.Padding = UDim.new(0, 10)
+        PageLayout.Padding = UDim.new(0, 8)
         PageLayout.Parent = Page
 
-        -- Animation Hover sur le bouton Tab
-        TabButton.MouseEnter:Connect(function()
-            if Window.CurrentTab ~= Page then
-                Tween(TabButton, {TextColor3 = Theme.Text}, 0.2)
-            end
-        end)
-        TabButton.MouseLeave:Connect(function()
-            if Window.CurrentTab ~= Page then
-                Tween(TabButton, {TextColor3 = Theme.TextDim}, 0.2)
-            end
-        end)
-
-        -- Logique de clic sur l'onglet
         TabButton.MouseButton1Click:Connect(function()
-            if Window.CurrentTab then Window.CurrentTab.Visible = false end
-            Window.CurrentTab = Page
+            if WindowObj.CurrentTab then WindowObj.CurrentTab.Visible = false end
+            WindowObj.CurrentTab = Page
             Page.Visible = true
             
-            -- Animation de transition de la page (Glissement vers le bas + Fade)
             Page.Position = UDim2.new(0, 10, 0, 20)
-            Page.CanvasPosition = Vector2.new(0,0)
-            Tween(Page, {Position = UDim2.new(0, 10, 0, 10)}, 0.4, Enum.EasingStyle.Quart)
+            Tween(Page, {Position = UDim2.new(0, 10, 0, 10)}, 0.3)
 
-            -- Reset couleurs des autres tabs
             for _, btn in pairs(TabContainer:GetChildren()) do
                 if btn:IsA("TextButton") then
                     Tween(btn, {BackgroundColor3 = Theme.Sidebar, TextColor3 = Theme.TextDim}, 0.2)
                 end
             end
-            Tween(TabButton, {BackgroundColor3 = Theme.HoverBG, TextColor3 = Theme.Accent}, 0.3)
+            Tween(TabButton, {BackgroundColor3 = Theme.HoverBG, TextColor3 = Theme.Accent}, 0.2)
         end)
 
-        -- Auto-sélection du premier tab
-        if not Window.CurrentTab then
-            TabButton.MouseButton1Click:Wait() -- Petite astuce pour cliquer automatiquement le premier
+        if not WindowObj.CurrentTab then
             TabButton.MouseButton1Click:Fire()
         end
 
-        local TabElements = {}
+        local Elements = {}
 
-        -- ======================================================================
-        -- ELEMENTS UI : BOUTON (Avec effet 3D Pop)
-        -- ======================================================================
-        function TabElements:CreateButton(btnText, callback)
+        function Elements:CreateButton(btnText, callback)
             local Button = Instance.new("TextButton")
-            Button.Size = UDim2.new(1, -10, 0, 40)
+            Button.Size = UDim2.new(1, -10, 0, 38)
             Button.BackgroundColor3 = Theme.ElementBG
             Button.Text = btnText
             Button.Font = Enum.Font.GothamBold
@@ -238,35 +294,23 @@ function FuturUI:CreateWindow(Config)
             AddCorner(Button, 6)
             local Stroke = AddStroke(Button, Theme.Background, 1)
 
-            -- Effet 3D Hover
             Button.MouseEnter:Connect(function()
                 Tween(Button, {BackgroundColor3 = Theme.HoverBG}, 0.2)
                 Tween(Stroke, {Color = Theme.Accent}, 0.2)
-                Tween(Button.UIScale or Instance.new("UIScale", Button), {Scale = 1.02}, 0.2) -- Pop effect
             end)
             Button.MouseLeave:Connect(function()
                 Tween(Button, {BackgroundColor3 = Theme.ElementBG}, 0.2)
                 Tween(Stroke, {Color = Theme.Background}, 0.2)
-                if Button:FindFirstChild("UIScale") then
-                    Tween(Button.UIScale, {Scale = 1}, 0.2)
-                end
             end)
 
             Button.MouseButton1Click:Connect(function()
-                -- Effet de clic
-                local scale = Button:FindFirstChild("UIScale") or Instance.new("UIScale", Button)
-                scale.Scale = 0.95
-                Tween(scale, {Scale = 1.02}, 0.3, Enum.EasingStyle.Elastic)
-                pcall(callback)
+                callback()
             end)
         end
 
-        -- ======================================================================
-        -- ELEMENTS UI : TOGGLE
-        -- ======================================================================
-        function TabElements:CreateToggle(tglText, callback)
+        function Elements:CreateToggle(tglText, callback)
             local ToggleFrame = Instance.new("Frame")
-            ToggleFrame.Size = UDim2.new(1, -10, 0, 40)
+            ToggleFrame.Size = UDim2.new(1, -10, 0, 38)
             ToggleFrame.BackgroundColor3 = Theme.ElementBG
             ToggleFrame.Parent = Page
             AddCorner(ToggleFrame, 6)
@@ -282,7 +326,6 @@ function FuturUI:CreateWindow(Config)
             ToggleText.TextXAlignment = Enum.TextXAlignment.Left
             ToggleText.Parent = ToggleFrame
 
-            -- Le bouton physique du toggle
             local ToggleBtn = Instance.new("TextButton")
             ToggleBtn.Size = UDim2.new(0, 40, 0, 20)
             ToggleBtn.Position = UDim2.new(1, -50, 0.5, -10)
@@ -292,7 +335,6 @@ function FuturUI:CreateWindow(Config)
             AddCorner(ToggleBtn, 10)
             AddStroke(ToggleBtn, Theme.TextDim, 1)
 
-            -- Le cercle à l'intérieur
             local Circle = Instance.new("Frame")
             Circle.Size = UDim2.new(0, 16, 0, 16)
             Circle.Position = UDim2.new(0, 2, 0.5, -8)
@@ -310,14 +352,14 @@ function FuturUI:CreateWindow(Config)
                     Tween(Circle, {Position = UDim2.new(0, 2, 0.5, -8), BackgroundColor3 = Theme.TextDim}, 0.3)
                     Tween(ToggleBtn.UIStroke, {Color = Theme.TextDim}, 0.3)
                 end
-                pcall(callback, enabled)
+                callback(enabled)
             end)
         end
 
-        return TabElements
+        return Elements
     end
 
-    return Window
+    return WindowObj
 end
 
-return FuturUI
+return VulcanUI
