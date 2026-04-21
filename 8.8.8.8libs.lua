@@ -1,5 +1,5 @@
 -- ======================================================================
--- VULCAN UI LIBRARY - FULL COMPATIBILITY & ANIMATED RED EDITION
+-- VULCAN UI LIBRARY - MASTER EDITION (ROUGE ANIMÉ)
 -- ======================================================================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
@@ -191,6 +191,25 @@ function VulcanUI:CreateWindow(Config)
     Tween(MainFrame, {Size = UDim2.new(0, 600, 0, 400)}, 0.5)
     Tween(Shadow, {ImageTransparency = 0.4}, 0.5)
 
+    -- Touche Insert pour Cacher/Afficher
+    local menuOpen = true
+    UserInputService.InputBegan:Connect(function(input, gp)
+        if not gp and input.KeyCode == Enum.KeyCode.Insert then
+            menuOpen = not menuOpen
+            if menuOpen then
+                MainFrame.Visible = true
+                Tween(initScale, {Scale = 1}, 0.4, Enum.EasingStyle.Back)
+                Tween(Shadow, {ImageTransparency = 0.4}, 0.4)
+            else
+                local shrink = Tween(initScale, {Scale = 0}, 0.3, Enum.EasingStyle.Back)
+                Tween(Shadow, {ImageTransparency = 1}, 0.3)
+                shrink.Completed:Wait()
+                MainFrame.Visible = false
+            end
+        end
+    end)
+
+    -- Dragging
     local dragging, dragInput, dragStart, startPos
     Title.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -206,26 +225,6 @@ function VulcanUI:CreateWindow(Config)
         end
     end)
 
-    -- ==========================================
-    -- NOUVEAU : TOUCHE INSERT POUR OUVRIR/FERMER
-    -- ==========================================
-    local menuOpen = true
-    UserInputService.InputBegan:Connect(function(input, gameProcessed)
-        if not gameProcessed and input.KeyCode == Enum.KeyCode.Insert then
-            menuOpen = not menuOpen
-            if menuOpen then
-                MainFrame.Visible = true
-                Tween(MainFrame, {Size = UDim2.new(0, 600, 0, 400)}, 0.4, Enum.EasingStyle.Back)
-                Shadow.Visible = true
-            else
-                local shrink = Tween(MainFrame, {Size = UDim2.new(0, 400, 0, 0)}, 0.3)
-                Shadow.Visible = false
-                shrink.Completed:Wait()
-                MainFrame.Visible = false
-            end
-        end
-    end)
-    
     local WindowObj = { CurrentTab = nil }
     
     function WindowObj:CreateTab(TabName)
@@ -252,12 +251,10 @@ function VulcanUI:CreateWindow(Config)
         PageLayout.Padding = UDim.new(0, 8)
         PageLayout.Parent = Page
 
-        -- CORRECTIF : Mise à jour automatique de la taille de la page pour le défilement
         PageLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
             Page.CanvasSize = UDim2.new(0, 0, 0, PageLayout.AbsoluteContentSize.Y + 20)
         end)
 
-        -- Fonction d'ouverture d'onglet propre (remplace le :Fire buggé)
         local function SelectTab()
             if WindowObj.CurrentTab == Page then return end
             if WindowObj.CurrentTab then WindowObj.CurrentTab.Visible = false end
@@ -278,10 +275,7 @@ function VulcanUI:CreateWindow(Config)
 
         TabButton.MouseButton1Click:Connect(SelectTab)
 
-        -- CORRECTIF : Exécute la fonction directement au lieu de simuler un clic
-        if not WindowObj.CurrentTab then
-            SelectTab()
-        end
+        if not WindowObj.CurrentTab then SelectTab() end
 
         local Elements = {}
 
@@ -297,25 +291,11 @@ function VulcanUI:CreateWindow(Config)
             Button.Parent = Page
             AddCorner(Button, 6)
             local Stroke = AddStroke(Button, Theme.Background, 1)
-            
             local ScaleObj = Instance.new("UIScale", Button)
 
-            Button.MouseEnter:Connect(function()
-                Tween(Button, {BackgroundColor3 = Theme.HoverBG}, 0.2)
-                Tween(Stroke, {Color = Theme.Accent}, 0.2)
-                Tween(ScaleObj, {Scale = 1.02}, 0.2)
-            end)
-            Button.MouseLeave:Connect(function()
-                Tween(Button, {BackgroundColor3 = Theme.ElementBG}, 0.2)
-                Tween(Stroke, {Color = Theme.Background}, 0.2)
-                Tween(ScaleObj, {Scale = 1}, 0.2)
-            end)
-
-            Button.MouseButton1Click:Connect(function()
-                ScaleObj.Scale = 0.94
-                Tween(ScaleObj, {Scale = 1.02}, 0.3, Enum.EasingStyle.Back)
-                callback()
-            end)
+            Button.MouseEnter:Connect(function() Tween(Button, {BackgroundColor3 = Theme.HoverBG}, 0.2); Tween(Stroke, {Color = Theme.Accent}, 0.2); Tween(ScaleObj, {Scale = 1.02}, 0.2) end)
+            Button.MouseLeave:Connect(function() Tween(Button, {BackgroundColor3 = Theme.ElementBG}, 0.2); Tween(Stroke, {Color = Theme.Background}, 0.2); Tween(ScaleObj, {Scale = 1}, 0.2) end)
+            Button.MouseButton1Click:Connect(function() ScaleObj.Scale = 0.94; Tween(ScaleObj, {Scale = 1.02}, 0.3, Enum.EasingStyle.Back); callback() end)
         end
 
         function Elements:CreateToggle(tglText, callback)
@@ -354,25 +334,13 @@ function VulcanUI:CreateWindow(Config)
             AddCorner(Circle, 8)
             
             local ScaleObj = Instance.new("UIScale", ToggleFrame)
-
-            ToggleFrame.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseMovement then
-                    Tween(ScaleObj, {Scale = 1.01}, 0.2)
-                end
-            end)
-            ToggleFrame.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseMovement then
-                    Tween(ScaleObj, {Scale = 1}, 0.2)
-                end
-            end)
+            ToggleFrame.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then Tween(ScaleObj, {Scale = 1.01}, 0.2) end end)
+            ToggleFrame.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then Tween(ScaleObj, {Scale = 1}, 0.2) end end)
 
             local enabled = false
             ToggleBtn.MouseButton1Click:Connect(function()
                 enabled = not enabled
-                
-                ScaleObj.Scale = 0.96
-                Tween(ScaleObj, {Scale = 1.01}, 0.3, Enum.EasingStyle.Back)
-
+                ScaleObj.Scale = 0.96; Tween(ScaleObj, {Scale = 1.01}, 0.3, Enum.EasingStyle.Back)
                 if enabled then
                     Tween(Circle, {Position = UDim2.new(1, -18, 0.5, -8), BackgroundColor3 = Theme.Accent}, 0.3, Enum.EasingStyle.Back)
                     Tween(ToggleBtn.UIStroke, {Color = Theme.Accent}, 0.3)
@@ -386,9 +354,6 @@ function VulcanUI:CreateWindow(Config)
             end)
         end
 
-        -- ==========================================
-        -- NOUVEAU : CRÉATION DE SLIDER
-        -- ==========================================
         function Elements:CreateSlider(slidText, min, max, default, callback)
             local SliderFrame = Instance.new("Frame")
             SliderFrame.Size = UDim2.new(1, -10, 0, 50)
@@ -427,12 +392,8 @@ function VulcanUI:CreateWindow(Config)
             SliderBtn.Parent = SliderBG
 
             local dragging = false
-            SliderBtn.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true end
-            end)
-            UserInputService.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
-            end)
+            SliderBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true end end)
+            UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
 
             UserInputService.InputChanged:Connect(function(input)
                 if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
@@ -451,7 +412,6 @@ function VulcanUI:CreateWindow(Config)
 
         return Elements
     end
-
     return WindowObj
 end
 
