@@ -366,6 +366,69 @@ function VulcanUI:CreateWindow(Config)
             end)
         end
 
+        -- ==========================================
+        -- NOUVEAU : CRÉATION DE SLIDER
+        -- ==========================================
+        function Elements:CreateSlider(slidText, min, max, default, callback)
+            local SliderFrame = Instance.new("Frame")
+            SliderFrame.Size = UDim2.new(1, -10, 0, 50)
+            SliderFrame.BackgroundColor3 = Theme.ElementBG
+            SliderFrame.Parent = Page
+            AddCorner(SliderFrame, 6)
+            
+            local SliderText = Instance.new("TextLabel")
+            SliderText.Text = slidText .. " : " .. tostring(default)
+            SliderText.Size = UDim2.new(1, -20, 0, 20)
+            SliderText.Position = UDim2.new(0, 10, 0, 5)
+            SliderText.Font = Enum.Font.GothamBold
+            SliderText.TextColor3 = Theme.Text
+            SliderText.TextSize = 14
+            SliderText.BackgroundTransparency = 1
+            SliderText.TextXAlignment = Enum.TextXAlignment.Left
+            SliderText.Parent = SliderFrame
+
+            local SliderBG = Instance.new("Frame")
+            SliderBG.Size = UDim2.new(1, -20, 0, 6)
+            SliderBG.Position = UDim2.new(0, 10, 0, 32)
+            SliderBG.BackgroundColor3 = Theme.Background
+            SliderBG.Parent = SliderFrame
+            AddCorner(SliderBG, 4)
+
+            local SliderFill = Instance.new("Frame")
+            SliderFill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
+            SliderFill.BackgroundColor3 = Theme.Accent
+            SliderFill.Parent = SliderBG
+            AddCorner(SliderFill, 4)
+
+            local SliderBtn = Instance.new("TextButton")
+            SliderBtn.Size = UDim2.new(1, 0, 1, 0)
+            SliderBtn.BackgroundTransparency = 1
+            SliderBtn.Text = ""
+            SliderBtn.Parent = SliderBG
+
+            local dragging = false
+            SliderBtn.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true end
+            end)
+            UserInputService.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
+            end)
+
+            UserInputService.InputChanged:Connect(function(input)
+                if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                    local mousePos = UserInputService:GetMouseLocation().X
+                    local sliderPos = SliderBG.AbsolutePosition.X
+                    local sliderSize = SliderBG.AbsoluteSize.X
+                    local percent = math.clamp((mousePos - sliderPos) / sliderSize, 0, 1)
+                    
+                    Tween(SliderFill, {Size = UDim2.new(percent, 0, 1, 0)}, 0.1)
+                    local value = math.floor(min + ((max - min) * percent))
+                    SliderText.Text = slidText .. " : " .. tostring(value)
+                    callback(value)
+                end
+            end)
+        end
+
         return Elements
     end
 
